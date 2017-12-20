@@ -1,6 +1,7 @@
 SYVraw<-read.csv('SYV_AP_clean.csv')
 WCRraw<-read.csv('WCR_AP_clean.csv')
 
+<<<<<<< HEAD
 start<-189
 end<-260
 
@@ -19,6 +20,11 @@ WCR.lag<-cbind(wcr.meta,wcr.data)
 
 SYVcore<-SYVraw[SYVraw$DOY>=start &SYVraw$DOY<end,c(2:4, 7:10)]
 WCRcore<-WCR.lag[WCR.lag$DOY>=start &WCR.lag$DOY<end,c(2:4,7:10)]
+=======
+
+SYVcore<-SYVraw[,c(2:4, 7:10)]
+WCRcore<-WCRraw[,c(2:4,7:10)]
+>>>>>>> df0abd62721d081c43a0773d4ffd7c0d6b29894e
 
 
 SYVcore$Dectime=(SYVcore$H)+((SYVcore$M)/60)
@@ -26,6 +32,7 @@ SYVcore$DecDay=(SYVcore$DOY)+(SYVcore$Dectime/24)
 WCRcore$Dectime=(WCRcore$H)+((WCRcore$M)/60)
 WCRcore$DecDay=(WCRcore$DOY)+(WCRcore$Dectime/24)
 
+<<<<<<< HEAD
 
 syv.temp<-SYVcore[SYVcore$M==0 | SYVcore$M==30,]
 wcr.temp<-WCRcore[WCRcore$M==0 | WCRcore$M==30,]
@@ -95,3 +102,42 @@ legend(0,22.5,legend=c('Old', 'Second'), lwd=3,col=c('black', 'dark gray'), cex=
 #   plot(wcr.flow[,i+5], wcr.resid, main=i, xlab='Flux', ylab='Ts - Ta')
 #   print(summary(lm(wcr.resid~wcr.flow[,i+5])))
 # }
+=======
+##Earlier plots
+
+# SYValign<-SYVcore[8673:38319,]
+# 
+# WCRmeans=colMeans(WCRcore[4:7], na.rm=TRUE)
+# #WCRsdcalc=apply(WCRcore,2,sd, na.rm=TRUE)
+# #WCRsd=WCRsdcalc[4:7]
+# SYVmeans=colMeans(SYValign[4:7], na.rm=TRUE)
+# #SYVsdcalc=apply(SYValign,2,sd, na.rm=TRUE)
+# #SYVsd=SYVsdcalc[4:7]
+# 
+# #Differences=SYValign[,4:7]-WCRcore[4:7]
+# #plot(SYValign$DecDay,Differences$T1, type='l')
+# 
+# AlignDifferences<-Differences[4600:29647,]
+# #plot(SYValign$DecDay[4600:29647],AlignDifferences$T1, type='l')
+# CombineSense<-rowMeans(AlignDifferences)
+# plot(SYValign$DecDay[4600:29647],CombineSense, type='l', 
+#      main='Temp. Differences',ylab='Temp. Difference (SYV-WCR)',
+#      xlab='DOY')
+# 
+# SYValign2<-SYValign[4600:29647,]
+# 
+# Midday<-CombineSense[SYValign2$H == 12 |SYValign2$H == 11 |SYValign2$H == 13]
+# mean(Midday, na.rm=TRUE)
+# 
+# Night<-CombineSense[SYValign2$H == 1 |SYValign2$H == 2 |SYValign2$H == 3]
+# mean(Night, na.rm=TRUE)
+# 
+# AvgDiffs<-colMeans(AlignDifferences, na.rm=TRUE)
+# DoubleAvg=mean(AvgDiffs)
+
+
+
+
+
+
+>>>>>>> df0abd62721d081c43a0773d4ffd7c0d6b29894e
