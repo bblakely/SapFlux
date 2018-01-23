@@ -1,5 +1,9 @@
-source('Prepare_treedata.R')
+#Calcualtes sap flow for measured trees.
+
+source('Prepare_treedata.R') #throws a NaN for one small tree that is all sapwood
 library(vioplot)
+
+#Read in Baseliner-processed data. The 'manual' refers to manual processing in baseliner
 syv.raw<-read.csv('SYV_manual.csv')
 wcr.raw<-read.csv('WCR_manual.csv')
 
@@ -19,38 +23,42 @@ wcr.raw$H<-rep(c(0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,
 
 wcr.raw$M<-rep(c(0,30),(24*nDOY))
 
-
+#Set a time (hour of day, i.e. 14  is 2pm) for comparisons
 time=14
 
 #Choose a site. Eventually I'll streamline this. But for now do sequentially
 DAT<-syv.raw
 DAT$Dectime=(DAT$H)+((DAT$M)/60)
 DAT$DecDay<-(DAT$DOY)+(DAT$Dectime/24)
-fc<-6
-lc<-25
+fc<-6 #first column with data
+lc<-25 #last column with data
 
 DAT.s<-DAT[fc:lc]
-Flux<-as.data.frame(0.000119*(DAT.s^1.231))
+Flux<-as.data.frame(0.000119*(DAT.s^1.231)) #Baseliner generates k's. This uses the granier equation to calculate flux from k.
 flux.mean<-colMeans(Flux, na.rm=TRUE)
 flux.syv<-Flux
 
-treemult<-(syv.tree$Multiplier*(syv.tree$SWA/10000))
-treemult[3]<-(syv.tree$SWA[3])/10000
+treemult<-(syv.tree$Multiplier*(syv.tree$SWA/10000)) #effective sapwood
+treemult[3]<-(syv.tree$SWA[3])/10000 #Fix all-sapwood NAN tree
 
-Flow<-(sweep(Flux,2,treemult,'*'))
+#Multiply flux by sapwood area
+Flow<-(sweep(Flux,2,treemult,'*')) 
 syv.flow<-cbind(DAT[,c(2,4:5,28:29)],Flow)
-Flow.pd<-Flow*1800  #1800 seconds in 30 min
-
+Flow.pd<-Flow*1800  #Unit conversion m3/s -> m3/30 min (there are 1800 seconds in 30 min)
 
 flow.time<-colMeans(Flow.pd[syv.flow$Dectime==time,], na.rm=TRUE)
 
-Daily.m3.s<-(aggregate(Flow.pd,by=list(DAT$DOY),FUN=sum))
-Daily<-Daily.m3.s[2:21]*1000  #1000 L per m3
+#Add all time periods together to make a whole day
+Daily.m3<-(aggregate(Flow.pd,by=list(DAT$DOY),FUN=sum))
+Daily<-Daily.m3[2:21]*1000  #1000 L per m3
+syv.daily<-Daily
 
-flow.mean<-colMeans(Daily, na.rm=TRUE)
+
+flow.mean<-colMeans(Daily, na.rm=TRUE) #Mean flow across days
 
 nSensors<-ncol(Daily)
 
+#Make list of colors for plotting
 colvec<-rep('black', nSensors)
 colvec[syv.tree$SPP=="ACSA"]<-'orange'
 colvec[syv.tree$SPP=="ACRU"]<-'red'
@@ -63,9 +71,8 @@ colvec[syv.tree$SPP=="OSVI"]<-'dark red'
 colvec[syv.tree$SPP=="FRPE"]<-'white'
 
 
-
 syv.plot.info<-cbind(syv.tree,flux.mean,flow.mean, flow.time, colvec)
-syv.plot.info$ba.norm<-(syv.plot.info$flow.mean)/syv.plot.info$BA
+syv.plot.info$ba.norm<-(syv.plot.info$flow.mean)/syv.plot.info$BA 
 syv.plot.sort<-syv.plot.info[order(syv.plot.info$SPP, syv.plot.info$DBH),]
 barplot(syv.plot.sort$flow.mean,col=as.character(syv.plot.sort$colvec))
 
@@ -93,6 +100,7 @@ flow.time<-colMeans(Flow.pd[syv.flow$Dectime==time,], na.rm=TRUE)
 
 Daily.m3.s<-(aggregate(Flow.pd,by=list(DAT$DOY),FUN=sum))
 Daily<-Daily.m3.s[2:15]*1000  #1000 L per m3
+wcr.daily<-Daily
 
 flow.mean<-colMeans(Daily, na.rm=TRUE)
 
@@ -114,13 +122,15 @@ wcr.plot.info$ba.norm<-(wcr.plot.info$flow.mean)/wcr.plot.info$BA
 wcr.plot.sort<-wcr.plot.info[order(wcr.plot.info$SPP, wcr.plot.info$DBH),]
 barplot(wcr.plot.sort$flow.mean,col=as.character(wcr.plot.sort$colvec))
 
-
+#Barplots normalized by basal area
 barplot(wcr.plot.sort$ba.norm,col=as.character(wcr.plot.sort$colvec), main='BA', ylim=c(0,0.06))
 barplot(syv.plot.sort$ba.norm,col=as.character(syv.plot.sort$colvec), main='BA', ylim=c(0,0.06))
 
+#Barplots of flux (not flow)
 barplot(wcr.plot.sort$flux.mean,col=as.character(wcr.plot.sort$colvec), main=' WCR Flux Rate')
 barplot(syv.plot.sort$flux.mean,col=as.character(syv.plot.sort$colvec), main='SYV Flux Rate')
 
+#Write processed CSVs
 write.csv(syv.plot.sort,'syv.summary.csv')
 write.csv(wcr.plot.sort,'wcr.summary.csv')
 
@@ -146,7 +156,6 @@ wcr.flux.sp<-aggregate(wcr.plot.sort$flux.mean,list(wcr.plot.sort$SPP),FUN=mean)
 
 
 #Violin plots of flux
-no.nan<-lapply(wcr.flow[wcr.flow$Dectime==13.0,6:19],na.omit)
 no.nan.flux<-lapply(flux.wcr[wcr.flow$Dectime==14.0,],na.omit)
 # vioplot(unlist(no.nan[1]),unlist(no.nan[2]),unlist(no.nan[3]),unlist(no.nan[4]),unlist(no.nan[5]),unlist(no.nan[6]),unlist(no.nan[7]),unlist(no.nan[8]),unlist(no.nan[9]),
 #         unlist(no.nan[10]),unlist(no.nan[11]),unlist(no.nan[12]),unlist(no.nan[13]),unlist(no.nan[14]), col='white')
@@ -157,7 +166,6 @@ for (i in 1:14) {
 }
 axis(side=1,at=1:14,labels=wcr.plot.info$SPP)
 axis(side=2,at=seq(from=0,to=2e-04,length.out=5),labels=seq(from=0,to=2e-04,length.out=5))
-
 
 
 #Now SYV!
@@ -173,7 +181,25 @@ axis(side=1,at=1:20,labels=syv.plot.info$SPP)
 axis(side=2,at=seq(from=0,to=2e-04,length.out=5),labels=seq(from=0,to=2e-04,length.out=5))
 
 
-####Diel profliles, woo
+#Vioplots of flow
+no.nan<-lapply(wcr.daily,na.omit)
+plot(0:20,ylim=c(0,150), axes=FALSE, ylab="Flow", xlab="Species", col='white')
+for (i in 1:14) { 
+  vioplot(unlist(no.nan[i]), at = i, add = T, col = as.character(wcr.plot.info$colvec[i]))
+}
+axis(side=1,at=1:14,labels=wcr.plot.info$SPP)
+axis(side=2,at=seq(from=0,to=150,length.out=10),labels=seq(from=0,to=150,length.out=10))
+
+no.nan<-lapply(syv.daily,na.omit)
+plot(0:20,ylim=c(0,150), axes=FALSE, ylab="Flow", xlab="Species", col='white')
+for (i in 1:20) { 
+  vioplot(unlist(no.nan[i]), at = i, add = T, col = as.character(syv.plot.info$colvec[i]))
+}
+axis(side=1,at=1:20,labels=syv.plot.info$SPP)
+axis(side=2,at=seq(from=0,to=150,length.out=10),labels=seq(from=0,to=150,length.out=10))
+
+
+####Diel profliles, woo#####
 diels.syv<-aggregate(syv.flow, by=list(syv.flow$Dectime), FUN=mean, na.rm=TRUE)
 diels.wcr<-aggregate(wcr.flow, by=list(wcr.flow$Dectime), FUN=mean, na.rm=TRUE)
 
