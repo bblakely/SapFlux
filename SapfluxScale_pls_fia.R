@@ -190,13 +190,22 @@ plotnice<-function(toplot, breakset, colset='BrBG', title='sapflux'){
 }
 
 par(mar=c(4,4,4,1))
-plotnice(pls.transp.tot/(24*6400), breakset.abs/(24*6400), title='Historic')
-plotnice(fia.transp.tot/(24*6400), breakset.abs/(24*6400),title='Modern')
+plotnice(pls.transp.tot/(24*6400*10), breakset.abs/(24*6400*10), title='Historic')
+plotnice(fia.transp.tot/(24*6400*10), breakset.abs/(24*6400*10),title='Modern')
 
+#real messy conversion. 24 converts days - > hours, 6400 converts 8km2 -> 1km2
+#10 is a weird one; original numbers multiply m2/s * cm2.
+# m2 | cm2 |  m2     ->   m3
+# s  |     |10000cm2 -> s * 10000
+#But now we might as well do L  (also kg) so
+#   m3     | 1000 L ->   L
+# s *10000 |   m3   -> s * 10
+#Current plots (pre-1/16) don't have the 10 and are in dL / km2h
+#Plots now in L/km2h
 
 diff.transp<-cbind(georef,fia.transp$transp-pls.transp$transp)
 
-plotnice(diff.transp/(24*6400),breakset.diff/(24*6400), colset="RdYlGn", title='Difference (Modern-Historic)')
+plotnice(diff.transp/(24*6400*10),breakset.diff/(24*6400*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 
 
 sp.plot='no'  #Do you want regressions by species plots?
