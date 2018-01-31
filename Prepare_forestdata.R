@@ -52,7 +52,7 @@ syv.forest$SWA[bighemlock]<-(syv.forest$ba[bighemlock])-(3.14159*((syv.forest$db
 Vars<-c('id','species','dbh', 'cc', 'ba','SWA','SWD')
 syv.forest.dat<-subset(syv.forest, select=Vars)
 
-write.csv(syv.forest.dat, 'SYV_FOREST.csv')
+#write.csv(syv.forest.dat, 'SYV_FOREST.csv')
 
 ###Now do it all again for WCR
 wcr.forest.raw<-read.csv('WCR_FS.csv')
