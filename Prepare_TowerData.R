@@ -47,3 +47,6 @@ write.csv(syv.twr.extra, "SYV_Tower_ex.csv")
 write.csv(wcr.twr.extra, "WCR_Tower_ex.csv")
 
 
+wcr.twr.2016<-wcr.twr.std[wcr.twr.std$YEAR==2016,]
+syv.twr.2016<-syv.twr.std[syv.twr.std$YEAR==2016,]
+

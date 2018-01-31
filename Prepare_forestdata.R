@@ -5,8 +5,8 @@ syv.forest$species<-as.character(syv.forest$species)
 syv.forest$species[syv.forest$species=='acsa?']<-'acsa'  #assume we were right
 
 #dummy forest file for same allometries
-syv.forest.dum<-syv.forest
-syv.forest.dum$SWA<-0.312*syv.forest$dbh^2.07
+#syv.forest.dum<-syv.forest
+#syv.forest.dum$SWA<-0.312*syv.forest$dbh^2.07
 
 #Species Allometries
 syv.forest$SWA<-NaN
@@ -61,8 +61,8 @@ wcr.forest<-wcr.forest.raw[,c(1:8, 12)]
 wcr.forest$species<-as.character(wcr.forest$species)
 
 #Making a dummy forest file for all same allometries
-wcr.forest.dum<-wcr.forest
-wcr.forest.dum$SWA<-0.312*wcr.forest$dbh^2.07
+#wcr.forest.dum<-wcr.forest
+#wcr.forest.dum$SWA<-0.312*wcr.forest$dbh^2.07
 
 #Species Allometries
 wcr.forest$SWA<-NaN
@@ -101,7 +101,6 @@ Vars<-c('id','species','dbh', 'cc', 'ba','SWA','SWD')
 wcr.forest.dat<-subset(wcr.forest, select=Vars)
 
 write.csv(wcr.forest.dat, 'WCR_FOREST.csv')
-
 
 
 
