@@ -1,6 +1,8 @@
 #Aggregate to species fluxrates
 source('Prepare_data.R')
 
+#Reads in gapfilled files for sapflux rates, in g/m2 s
+
 sapstart<-10
 
 syv.tsca<-unname(rowMeans(syv.master[,sapstart+which(syv.tree$SPP=='TSCA')], na.rm=TRUE))
@@ -24,7 +26,7 @@ wcr.sapsum<-summ.flux(wcr.master,wcr.tree,sapstart)
 wcr.sapsum$QURU<-wcr.sapsum$UK #Not quite right; should find something more precise.
 
 #Make unbelievably large matrix of forest for each.
-
+#This version takes species averages; could split into overstory and understory to investigate sensitivity
 modeltrees<-function(sapsum,tree){
 mega<-matrix(nrow=nrow(sapsum), ncol=nrow(tree))
 colnames(sapsum)<-tolower(colnames(sapsum))
