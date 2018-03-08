@@ -483,29 +483,38 @@ mean(syv.twr$WS_1[daygs], na.rm=TRUE)
 
 par(mfrow=c(1,2))
 
-plot(rollapply(wcr.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='H')
+plot(rollapply(wcr.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='H', ylab='Wm-2')
 lines(rollapply(syv.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 plot(rollapply(wcr.twr$H_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 abline(h=0, col='red')
 
-plot(rollapply(wcr.le, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LE', ylim=c(0,150))
+plot(rollapply(wcr.le, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LE', ylim=c(0,150), ylab='Wm-2')
 lines(rollapply(syv.twr$LE_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 plot(rollapply(wcr.le, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$LE_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 abline(h=0, col='red')
 
-plot(rollapply(wcr.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='NETRAD', ylim=c(0,250))
+plot(rollapply(wcr.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='NETRAD', ylim=c(0,250), ylab='Wm-2')
 lines(rollapply(syv.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 plot(rollapply(wcr.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 abline(h=0, col='red')
 
-plot(rollapply(wcr.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='SW_IN', ylim=c(0,600))
+plot(rollapply(wcr.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='SW_IN', ylim=c(0,600), ylab='Wm-2')
 lines(rollapply(syv.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 plot(rollapply(wcr.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 abline(h=0, col='red')
 
-plot(rollapply(wcr.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LW_OUT', ylim=c(0,600))
+plot(rollapply(wcr.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LW_OUT', ylim=c(0,600), ylab='Wm-2')
 lines(rollapply(syv.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 plot(rollapply(wcr.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
+abline(h=0, col='red')
+
+wcr.twr$TA_1[wcr.twr$TA_1<(-32)]<-NA
+jumps<-unique(c(which(abs(diff(wcr.twr$TA_1))>10), which(abs(diff(wcr.twr$TA_1))>10)+1))
+wcr.twr$TA_1[jumps]<-NA
+
+plot(rollapply(wcr.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='TA_1', ylim=c(-20,30), ylab='Wm-2')
+lines(rollapply(syv.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
+plot(rollapply(wcr.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
 abline(h=0, col='red')
 
 ####New work week of Mar 5 - seasonal and daily trends in turb. fluxes, qc check
@@ -633,15 +642,12 @@ summary(wcr.cal)
 abline(coef(wcr.cal), col='red')
 abline(coef(syv.cal, col='blue'))
 
-coef(syv.cal)
-coef(wcr.cal)
-
 par(mfrow=c(1,2))
 
 syv.gap<-syv.twr$NETRAD_1-(syv.twr$H_1+syv.twr$LE_1)
 wcr.gap<-wcr.twr$NETRAD_1-(wcr.twr$H_1+wcr.twr$LE_1)
 
-calcdev<-function(gap, co=3){
+calcdev<-function(gap, co=2){
   gap.sd<-sd(gap, na.rm=TRUE)
   gap.err<-which(abs(gap)>(gap.sd*co))
   return(gap.err)
@@ -651,13 +657,13 @@ wcr.err<-calcdev(wcr.gap)
 
 wcr.res<-residuals(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1, na.action=na.exclude))
 wcr.res.sd<-sd(wcr.res, na.rm=TRUE)
-wcr.err2<-which(abs(wcr.res)>wcr.res.sd*3)
+wcr.err2<-which(abs(wcr.res)>wcr.res.sd*2)
 syv.res<-residuals(lm((syv.twr$H_1+syv.twr$LE_1)~syv.twr$NETRAD_1, na.action=na.exclude))
 syv.res.sd<-sd(syv.res, na.rm=TRUE)
-syv.err2<-which(abs(syv.res)>syv.res.sd*3)
+syv.err2<-which(abs(syv.res)>syv.res.sd*2)
 
 plot(wcr.twr$NETRAD_1,(wcr.twr$H_1+wcr.twr$LE_1))
-points(wcr.twr$SW_IN_1[wcr.err2],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err2], col='blue', pch=3, cex=0.7)
+points(wcr.twr$NETRAD_1[wcr.err2],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err2], col='blue', pch=3, cex=0.7)
 points(wcr.twr$NETRAD_1[wcr.err],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err], col='red', pch=20, cex=0.5)
 abline(0,1, col='red')
 abline(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1), col='blue')
@@ -675,15 +681,57 @@ hist(wcr.twr$DOY[wcr.err], xlim=c(0,366), ylim=c(0,60), breaks=seq(from=1, to=36
 hist(syv.twr$DOY[syv.err], xlim=c(0,366), ylim=c(0,60), breaks=seq(from=1, to=366, by=10))
 par(mfrow=c(1,2))
 
-#Lagging?
-col<-rep('black', nrow(syv.twr))
-col[syv.twr$HOUR>6]<-'orange'
-col[syv.twr$HOUR>11]<-'forest green'
-col[syv.twr$HOUR>18]<-'dark blue'
-col[syv.twr$HOUR>21]<-'black'
-plot(syv.twr$SW_IN~(wcr.twr$SW_IN), col=col,cex=0.7)
+#Shortwave alone?
 smoothScatter(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
 
+
+#Functionize smoothed plots
+
+plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
+  
+  par(mfrow=c(1,2))
+  
+  for(v in 1:length(varset)){
+    
+    varcol1<-which(colnames(dat1)==varset[v])
+    varcol2<-which(colnames(dat2)==varset[v])
+    
+    if(allhr==FALSE){
+      hrmult<-length(unique(dat1$HOUR))/24
+      ndays<-ndays*hrmult}
+    
+    sm1<-rollapply(dat1[,varcol1], 48*ndays, FUN='mean', na.rm=TRUE)
+    sm2<-rollapply(dat2[,varcol2], 48*ndays, FUN='mean', na.rm=TRUE)
+    
+    date<-rollapply(dat1$DTIME, 48*ndays, FUN='mean', na.rm=TRUE)
+    
+    #spike1<-which(abs(diff(sm1))>4*sd(diff(sm1), na.rm=TRUE))
+    #spike2<-which(abs(diff(sm2))>4*sd(diff(sm2), na.rm=TRUE))
+    
+    #sm1[spike1]<-NA
+    #sm2[spike2]<-NA
+    
+    ylim=c(min(c(sm1,sm2), na.rm=TRUE), max(c(sm1,sm2), na.rm=TRUE))
+    
+    plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab='Wm-2', ylim=ylim)
+    lines(sm2~date, type='l', ylab='Wm-2')
+    plot((sm1-sm2)~date, type='l', ylab='Wm-2')
+    abline(h=0, col='red')
+    
+  }
+}
+
+plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
+plotsmooth(dat1=wcr.twr[gsind,],dat2=syv.twr[gsind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
+plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
+
+allneg<-which(wcr.twr$H_1<0 | syv.twr$H_1<0 | wcr.twr$LE_1<0 | syv.twr$LE_1<0)
+wcr.sub<-wcr.twr
+wcr.sub[allneg,]<-NA
+syv.sub<-syv.twr
+syv.sub[allneg,]<-NA
+
+plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 
 
