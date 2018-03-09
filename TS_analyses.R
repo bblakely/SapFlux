@@ -119,103 +119,103 @@ abline(h=0,col='red')
 text(4,0.75, "syv more cooling"); text(9,-0.5, "wcr more cooling")
 
 
+#####Decompositions####
+# #Strip names
+# syv.td<-unname(syv.td)
+# #Various subsetting params
+# doy<-c(204:224)
+# startind<-min(which(syv.master$DOY%in%doy))
+# endind<-max(which(syv.master$DOY%in%doy))
+# dayhr<-c(6:20)
+# 
+# #Make timeseries
+# syv.td.ts<-ts((syv.td[startind:endind]), frequency=48)
+# #Metadata for timeseries period
+# syv.ref<-syv.master[startind: endind,]
+# 
+# #Decompose temp and sap
+# syv.decomp<-decompose(syv.td.ts)
+# syv.decomp.fancy<-stl(syv.td.ts,10, t.window=5)
+# 
+# syv.testsap<-ts(rowSums(syv.mega[startind:endind,], na.rm=TRUE), frequency=48)
+# syv.saptrend<-decompose(syv.testsap)
+# syv.saptrend.fancy<-stl(syv.testsap, 10, t.window=5)
+# 
+# #plot(syv.decomp)
+# #plot(syv.saptrend)
+# 
+# plot(syv.decomp.fancy, main='SYV.temp')
+# plot(syv.saptrend.fancy,main='SYV.sap')
+# 
+# 
+# #Strip names wcr
+# wcr.td<-unname(wcr.td)
+# 
+# #Subset wcr temp and metadata
+# wcr.td.ts<-ts((wcr.td[startind:endind]), frequency=48)
+# wcr.ref<-wcr.master[startind:endind,]
+# 
+# #Decompose wcr sap and temp
+# wcr.decomp<-decompose(wcr.td.ts)
+# wcr.decomp.fancy<-stl(wcr.td.ts,10, t.window=5)
+# 
+# wcr.testsap<-ts(rowSums(wcr.mega[startind:endind,], na.rm=TRUE), frequency=48)
+# wcr.saptrend<-decompose(wcr.testsap)
+# wcr.saptrend.fancy<-stl(wcr.testsap, 10, t.window=5)
+# 
+# #plot(wcr.decomp)
+# #plot(wcr.saptrend)
+# 
+# plot(wcr.decomp.fancy, main='WCR.temp')
+# plot(wcr.saptrend.fancy,main='WCR.sap')
+# 
+# #Decompose vpd (and subset trend)
+# syv.vpd<-stl(ts(na.spline(syv.ref$VPD_PI_1), frequency=48),10,t.window=5)[[1]][,2]
+# wcr.vpd<-stl(ts(na.spline(wcr.ref$VPD_PI_1), frequency=48),10,t.window=5)[[1]][,2]
+# 
+# #plot ts - sap trend relationships grouped by VPD trend (anomaly)
+# plotvpd<-function(saptrend, temptrend, vpdtrend, ref, dayhr=c(10:17),vpd.co=4, int=3){
+#   par(mfrow=c(2,3))
+#   cols<-c("blue","green", "yellow", "red", 'purple')
+#   plot(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co&vpdtrend<vpd.co+(int-1)),2],temptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co&vpdtrend<vpd.co+(int-1)),2], 
+#        xlab='sap', ylab='temp', ylim=c(-2,1.5), xlim=c(-0.5,1), pch=18)
+#   for(d in 1:5){
+#     vpd.co<-vpd.co+int
+#     plot(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2],temptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2], 
+#          xlab='sap', ylab='temp', ylim=c(-2,1.5), xlim=c(-100,400), col=cols[d], pch=18, main=paste("vpd",vpd.co))
+#     print(max(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2]))
+#     }
+#   par(mfrow=c(1,1))
+# }
+# 
+# plotvpd(syv.saptrend.fancy,syv.decomp.fancy,syv.vpd,syv.ref)
+# plotvpd(wcr.saptrend.fancy, wcr.decomp.fancy,wcr.vpd,wcr.ref)
+# 
+# 
+# #Reset some parameters
+# dayhr<-c(6:21)
+# dayref<-which(syv.ref$H%in%dayhr)
+# 
+# #Subset sap, t, vpd trends
+# syv.sap<-syv.saptrend.fancy[[1]][dayref,2]
+# wcr.sap<-wcr.saptrend.fancy[[1]][dayref,2]
+# 
+# syv.t<-syv.decomp.fancy[[1]][dayref,2]
+# wcr.t<-wcr.decomp.fancy[[1]][dayref,2]
+# 
+# syv.vpd<-syv.vpd[dayref]
+# wcr.vpd<-wcr.vpd[dayref]
+# 
+# #get solar and wind trends
+# syv.sun<-stl(ts(na.spline(syv.ref$NETRAD_1), frequency=48),10,t.window=5)[[1]][dayref,2]
+# syv.wind<-ts(na.spline(syv.ref$WS_1), frequency=48)[dayref] #Not deseasoned becasue diel trend not expected
+# #syv.wind<-stl(ts(na.spline(syv.ref$WS_1), frequency=48),10,t.window=5)[[1]][dayref,2]
+# 
+# 
+# test<-lm(syv.t~syv.sun+syv.sap)
+# summary(test)
 #####
-#Strip names
-syv.td<-unname(syv.td)
-#Various subsetting params
-doy<-c(204:224)
-startind<-min(which(syv.master$DOY%in%doy))
-endind<-max(which(syv.master$DOY%in%doy))
-dayhr<-c(6:20)
-
-#Make timeseries
-syv.td.ts<-ts((syv.td[startind:endind]), frequency=48)
-#Metadata for timeseries period
-syv.ref<-syv.master[startind: endind,]
-
-#Decompose temp and sap
-syv.decomp<-decompose(syv.td.ts)
-syv.decomp.fancy<-stl(syv.td.ts,10, t.window=5)
-
-syv.testsap<-ts(rowSums(syv.mega[startind:endind,], na.rm=TRUE), frequency=48)
-syv.saptrend<-decompose(syv.testsap)
-syv.saptrend.fancy<-stl(syv.testsap, 10, t.window=5)
-
-#plot(syv.decomp)
-#plot(syv.saptrend)
-
-plot(syv.decomp.fancy, main='SYV.temp')
-plot(syv.saptrend.fancy,main='SYV.sap')
-
-
-#Strip names wcr
-wcr.td<-unname(wcr.td)
-
-#Subset wcr temp and metadata
-wcr.td.ts<-ts((wcr.td[startind:endind]), frequency=48)
-wcr.ref<-wcr.master[startind:endind,]
-
-#Decompose wcr sap and temp
-wcr.decomp<-decompose(wcr.td.ts)
-wcr.decomp.fancy<-stl(wcr.td.ts,10, t.window=5)
-
-wcr.testsap<-ts(rowSums(wcr.mega[startind:endind,], na.rm=TRUE), frequency=48)
-wcr.saptrend<-decompose(wcr.testsap)
-wcr.saptrend.fancy<-stl(wcr.testsap, 10, t.window=5)
-
-#plot(wcr.decomp)
-#plot(wcr.saptrend)
-
-plot(wcr.decomp.fancy, main='WCR.temp')
-plot(wcr.saptrend.fancy,main='WCR.sap')
-
-#Decompose vpd (and subset trend)
-syv.vpd<-stl(ts(na.spline(syv.ref$VPD_PI_1), frequency=48),10,t.window=5)[[1]][,2]
-wcr.vpd<-stl(ts(na.spline(wcr.ref$VPD_PI_1), frequency=48),10,t.window=5)[[1]][,2]
-
-#plot ts - sap trend relationships grouped by VPD trend (anomaly)
-plotvpd<-function(saptrend, temptrend, vpdtrend, ref, dayhr=c(10:17),vpd.co=4, int=3){
-  par(mfrow=c(2,3))
-  cols<-c("blue","green", "yellow", "red", 'purple')
-  plot(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co&vpdtrend<vpd.co+(int-1)),2],temptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co&vpdtrend<vpd.co+(int-1)),2], 
-       xlab='sap', ylab='temp', ylim=c(-2,1.5), xlim=c(-0.5,1), pch=18)
-  for(d in 1:5){
-    vpd.co<-vpd.co+int
-    plot(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2],temptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2], 
-         xlab='sap', ylab='temp', ylim=c(-2,1.5), xlim=c(-100,400), col=cols[d], pch=18, main=paste("vpd",vpd.co))
-    print(max(saptrend[[1]][which(ref$H%in%dayhr&vpdtrend>vpd.co-(int-1)&vpdtrend<vpd.co+(int-1)),2]))
-    }
-  par(mfrow=c(1,1))
-}
-
-plotvpd(syv.saptrend.fancy,syv.decomp.fancy,syv.vpd,syv.ref)
-plotvpd(wcr.saptrend.fancy, wcr.decomp.fancy,wcr.vpd,wcr.ref)
-
-
-#Reset some parameters
-dayhr<-c(6:21)
-dayref<-which(syv.ref$H%in%dayhr)
-
-#Subset sap, t, vpd trends
-syv.sap<-syv.saptrend.fancy[[1]][dayref,2]
-wcr.sap<-wcr.saptrend.fancy[[1]][dayref,2]
-
-syv.t<-syv.decomp.fancy[[1]][dayref,2]
-wcr.t<-wcr.decomp.fancy[[1]][dayref,2]
-
-syv.vpd<-syv.vpd[dayref]
-wcr.vpd<-wcr.vpd[dayref]
-
-#get solar and wind trends
-syv.sun<-stl(ts(na.spline(syv.ref$NETRAD_1), frequency=48),10,t.window=5)[[1]][dayref,2]
-syv.wind<-ts(na.spline(syv.ref$WS_1), frequency=48)[dayref] #Not deseasoned becasue diel trend not expected
-#syv.wind<-stl(ts(na.spline(syv.ref$WS_1), frequency=48),10,t.window=5)[[1]][dayref,2]
-
-
-test<-lm(syv.t~syv.sun+syv.sap)
-summary(test)
-
-##going to sapflux trends
+####SAPFLUX TRENDS####
 #Site level sums of transp
 syv.sap.all<-rowSums(syv.mega, na.rm=TRUE)
 wcr.sap.all<-rowSums(wcr.mega, na.rm=TRUE)
@@ -285,14 +285,17 @@ text(c(-0.2,-0.2,0.28,0.28),c(50000,-20000,50000,-20000), c("wcr cooler+more tra
 # syv.voi.spline<-na.spline(syv.voi)
 # #origtest<-cforest(na.spline(syv.td)~., data=syv.voi, control=cforest_unbiased(mtry=2,ntree=50))
 # vars<-varimp(origtest)
+#####
+####At Adrian's suggestion, more basic plotting####
 
-#####At Adrian's suggestion, more basic plotting
-
-wcr.td[wcr.td>8]<-NA
-syv.td[syv.td>8]<-NA
+#Set dataframes
 
 wcr.twr<-wcr.twr.2016
 syv.twr<-syv.twr.2016
+wcr.twr$LE_1<-wcr.le #Put in filled LE for WCR
+
+syv.twr.gs<-syv.twr[syv.twr$DOY%in%gs,]
+wcr.twr.gs<-wcr.twr[wcr.twr$DOY%in%gs,]
 
 syv.sap.all.1<-syv.sap.all
 wcr.sap.all.1<-wcr.sap.all
@@ -300,19 +303,40 @@ wcr.sap.all.1<-wcr.sap.all
 syv.sap.all[syv.sap.all==0]<-NA
 wcr.sap.all[wcr.sap.all==0]<-NA
 
-dayhr<-c(6:20)
+wcr.td[wcr.td>8]<-NA
+syv.td[syv.td>8]<-NA
+
+
+#Indices used throughout 
+dayhr<-c(8:20)
+midday<-c(12:15)
 dayind<-which(syv.twr$HOUR%in%dayhr) #made earlier; daytime hours
+daymid<-which(syv.twr$HOUR%in%midday)
+
 gs<-gs #made earlier, growing season days
 gsind<-which(syv.twr$DOY%in%gs)
 
 daygs<-which(syv.twr$HOUR%in%dayhr & syv.twr$DOY%in%gs)
+midgs<-which(syv.twr$HOUR%in%midday & syv.twr$DOY%in%gs)
 
+####DF QC#####
 
-par(mfrow=c(1,2))
-plot(syv.td[gsind]~syv.sap.all[gsind], xlim=c(0,600), ylim=c(-5,5))
-plot(wcr.td[gsind]~wcr.sap.all[gsind], xlim=c(0,600), ylim=c(-5,5))
+#NAN all non-shared values (costly; check data loss)
+syv.nans<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
+wcr.nans<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
 
-#lag options. Currently a bit broken
+syv.twr[is.na(wcr.twr)]<-NA
+wcr.twr[is.na(syv.twr)]<-NA
+
+syv.nans.new<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
+wcr.nans.new<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
+
+syv.exloss<-syv.nans.new-syv.nans
+barplot(syv.exloss[10:length(syv.nans)], ylim=c(0,0.5))
+wcr.exloss<-wcr.nans.new-wcr.nans
+barplot(wcr.exloss[10:length(wcr.nans)], ylim=c(0,0.5))
+
+######Does sap lag T or vice-versa?#####
 lagplot<-function(temptype='raw',sign,index){
   #lag<-abs(i)-1
   #if (sign=="negative"){lag<-(-lag)}
@@ -339,64 +363,54 @@ for(i in 1:6){
 par(mfrow=c(1,2))
 lagplot("raw","negative",daygs)
 lagplot("diff","negative",daygs)
-
-par(mfrow=c(1,1))
-plot(syv.temp[7200:7600], type='l')
-par(new=T)
-plot(syv.sap.all[7200:7600], type='l', col='red',yaxt='n', ylab='')
-
-par(mfrow=c(1,2))
-plot(syv.td[gsind]~syv.twr$LE_1[gsind], xlim=c(0,600), ylim=c(-5,5), ylab='Ts-Ta', xlab='LE', main='SYV')
-plot(wcr.td[gsind]~wcr.twr$LE_1[gsind], xlim=c(0,600), ylim=c(-5,5), ylab='Ts-Ta', xlab='LE', main='WCR')
-
-plot(syv.td[gsind]~syv.twr$H_1[gsind], xlim=c(0,600), ylim=c(-5,5), ylab='Ts-Ta', xlab='H', main='SYV')
-plot(wcr.td[gsind]~wcr.twr$H_1[gsind], xlim=c(0,600), ylim=c(-5,5), ylab='Ts-Ta', xlab='H', main='WCR')
-
+#Best matches with sap lagged 30 min -hours, i.e. temps are driving sapflux
+#####
+####Bowen Ratio####
 syv.bowen<-syv.twr$H_1/syv.twr$LE_1 ; syv.bowen[syv.bowen>20 | syv.bowen<(-2)]<-NA
 wcr.bowen<-wcr.twr$H_1/wcr.twr$LE_1;  wcr.bowen[wcr.bowen>20 | wcr.bowen<(-2)]<-NA
+
 par(mfrow=c(1,2))
 plot(syv.td[daygs]~syv.bowen[daygs], xlim=c(-3,4), ylab='Ts-Ta', xlab="Bowen Ratio (H:LE)", main='SYV')
 abline(h=0, col='red')
-#abline(v=0, col='red')
+abline(v=0, col='red')
 plot(wcr.td[daygs]~wcr.bowen[daygs], xlim=c(-3,4), ylab='Ts-Ta', xlab="Bowen Ratio (H:LE)", main='WCR')
 abline(h=0, col='red')
-#abline(v=0, col='red')
+abline(v=0, col='red')
 
-par(mfrow=c(1,1))
+smoothScatter(syv.twr$LE_1[daygs]~syv.sap.all[daygs])
+smoothScatter(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs])
 
-plot(syv.twr$LE_1[daygs]~syv.sap.all[daygs])
-plot(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs])
+smoothScatter(syv.twr$LE_1[midgs]~syv.sap.all[midgs])
+smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs])
 
+#T:ET
 LE.sap.syv<-(syv.sap.all*2260*1000*1.37)/(6400*1800) #2260: spec. heat water KJ/kg (1kg = 1L); 1000: KJ to Joules; 1.37: surveyed area to total area. 6400: plot (80*80) to m2;  1800: 3o min to s
 plot(syv.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='SYV'); lines(LE.sap.syv)
 t.et.gs.syv<-LE.sap.syv[gsind]/syv.twr$LE_1[gsind]
-t.et.gs.syv[t.et.gs>1 | t.et.gs<0]<-NA
+t.et.gs.syv[t.et.gs.syv>1 | t.et.gs.syv<0]<-NA
 mean(t.et.gs.syv, na.rm=TRUE) #T:ET of 35% in gs
 
 LE.sap.wcr<-(wcr.sap.all*2260*1000*1.37)/(6400*1800)
 plot(wcr.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='WCR'); lines(LE.sap.wcr)
 t.et.gs.wcr<-LE.sap.wcr[gsind]/wcr.twr$LE_1[gsind]
-t.et.gs.wcr[t.et.gs>1 | t.et.gs<0]<-NA
+t.et.gs.wcr[t.et.gs.wcr>1 | t.et.gs.wcr<0]<-NA
 mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 38% in gs
 
 
-#testing radiation differences
-#NAN all unpaired obs
-wcr.twr$SW_IN[is.na(syv.twr$SW_IN)]<-NA
-syv.twr$SW_IN[is.na(wcr.twr$SW_IN)]<-NA
-wcr.twr$SW_OUT[is.na(syv.twr$SW_OUT)]<-NA
-syv.twr$SW_OUT[is.na(wcr.twr$SW_OUT)]<-NA
-wcr.twr$LW_IN[is.na(syv.twr$LW_IN)]<-NA
-syv.twr$LW_IN[is.na(wcr.twr$LW_IN)]<-NA
-wcr.twr$LW_OUT[is.na(syv.twr$LW_OUT)]<-NA
-syv.twr$LW_OUT[is.na(wcr.twr$LW_OUT)]<-NA
+#Explore radiation differences
 
-plot(wcr.twr$NETRAD_1~wcr.twr$DTIME, type='l')
-lines(syv.twr$NETRAD_1~wcr.twr$DTIME,col='red')
+#NAN all unpaired obs
+#wcr.twr$SW_IN[is.na(syv.twr$SW_IN)]<-NA;syv.twr$SW_IN[is.na(wcr.twr$SW_IN)]<-NA
+#wcr.twr$SW_OUT[is.na(syv.twr$SW_OUT)]<-NA;syv.twr$SW_OUT[is.na(wcr.twr$SW_OUT)]<-NA
+#wcr.twr$LW_IN[is.na(syv.twr$LW_IN)]<-NA;syv.twr$LW_IN[is.na(wcr.twr$LW_IN)]<-NA
+#wcr.twr$LW_OUT[is.na(syv.twr$LW_OUT)]<-NA;syv.twr$LW_OUT[is.na(wcr.twr$LW_OUT)]<-NA
+#wcr.twr$NETRAD_1[is.na(syv.twr$NETRAD_1)]<-NA;syv.twr$NETRAD_1[is.na(wcr.twr$NETRAD_1)]<-NA
 
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
 
 par(mfrow=c(1,3))
+
+#HOUR (diel)
 plot(aggregate(wcr.twr$NETRAD_1[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE), type='l', ylim=c(-100,700), col='blue', main='Rnet')
 lines(aggregate(syv.twr$NETRAD_1[gsind], by=list(syv.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE))
 
@@ -406,7 +420,17 @@ lines(aggregate(syv.twr$SW_IN[gsind], by=list(syv.twr$HOUR[gsind]), FUN='mean', 
 plot(aggregate(wcr.twr$SW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE), type='l', ylim=c(-100,700), col='blue', main='SWout')
 lines(aggregate(syv.twr$SW_OUT[gsind], by=list(syv.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE))
 
-par(mfrow=c(1,3))
+#MONTH (annual)
+plot(aggregate(wcr.twr$NETRAD_1, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE), type='l', ylim=c(0,400), col='blue', main='Rnet')
+lines(aggregate(syv.twr$NETRAD_1, by=list(syv.twr$MONTH), FUN='mean', na.rm=TRUE))
+
+plot(aggregate(wcr.twr$SW_IN, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE), type='l', ylim=c(0,400),col='blue', main='SWin')
+lines(aggregate(syv.twr$SW_IN, by=list(syv.twr$MONTH), FUN='mean', na.rm=TRUE))
+
+plot(aggregate(wcr.twr$SW_OUT, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE), type='l', ylim=c(0,400), col='blue', main='SWout')
+lines(aggregate(syv.twr$SW_OUT, by=list(syv.twr$MONTH), FUN='mean', na.rm=TRUE))
+
+#DIFF, HOUR (diel)
 plot(aggregate(wcr.twr$SW_IN[gsind]-wcr.twr$SW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_IN[gsind]-syv.twr$SW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', ylim=c(-75,30), main='SW')
 lines(aggregate(wcr.twr$SW_IN[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_IN[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', ylim=c(-75,30), main='SW', col='orange')
 lines(aggregate(wcr.twr$SW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', ylim=c(-75,30), col='yellow')
@@ -415,7 +439,7 @@ lines(aggregate(wcr.twr$LW_IN[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', 
 lines(aggregate(wcr.twr$LW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$LW_OUT[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', ylim=c(-75,30), col='yellow')
 plot(aggregate(wcr.twr$NETRAD_1[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$NETRAD_1[gsind], by=list(wcr.twr$HOUR[gsind]), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', ylim=c(-75,30), main='netrad')
 
-par(mfrow=c(1,3))
+#DIFF, MONTH (annual)
 plot(aggregate(wcr.twr$SW_IN-wcr.twr$SW_OUT, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_IN-syv.twr$SW_OUT, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', main='SWnet', ylim=c(-40,40))
 lines(aggregate(wcr.twr$SW_IN, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_IN, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', main='SWin (note scale)', ylim=c(-40,40), col='orange')
 lines(aggregate(wcr.twr$SW_OUT, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x-aggregate(syv.twr$SW_OUT, by=list(wcr.twr$MONTH), FUN='mean', na.rm=TRUE)$x, ylab='WCR - SYV', type='l', main="SWout", ylim=c(-40,40), col='yellow')
@@ -439,7 +463,6 @@ smoothScatter(wcr.alb[dayind]~wcr.twr$DTIME[dayind], ylim=c(0,1), main='wcr albe
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
 smoothScatter(syv.alb[dayind]~syv.twr$DTIME[dayind], ylim=c(0,1), main='syv albedo', ylab='albedo (SWout / SWin)', xlab='doy')
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
-
 
 
 ###EB balancing
@@ -466,9 +489,6 @@ syv.hnorm<-syv.twr$H_1/syv.twr$NETRAD_1
 syv.lenorm<-syv.twr$LE_1/syv.twr$NETRAD_1
 
 
-smoothScatter(wcr.hlenorm, ylim=c(-2,2))
-smoothScatter(syv.hlenorm, ylim=c(-2,2))
-
 mean(wcr.hlenorm[(wcr.hlenorm)<1 & (wcr.hlenorm)>0], na.rm=TRUE)
 mean(syv.hlenorm[(syv.hlenorm)<1 & (syv.hlenorm)>0], na.rm=TRUE)
 
@@ -481,63 +501,13 @@ mean(syv.twr$LE_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
 mean(wcr.twr$WS_1[daygs], na.rm=TRUE)
 mean(syv.twr$WS_1[daygs], na.rm=TRUE)
 
-par(mfrow=c(1,2))
-
-plot(rollapply(wcr.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='H', ylab='Wm-2')
-lines(rollapply(syv.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.twr$H_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$H_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
-plot(rollapply(wcr.le, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LE', ylim=c(0,150), ylab='Wm-2')
-lines(rollapply(syv.twr$LE_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.le, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$LE_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
-plot(rollapply(wcr.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='NETRAD', ylim=c(0,250), ylab='Wm-2')
-lines(rollapply(syv.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$NETRAD_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
-plot(rollapply(wcr.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='SW_IN', ylim=c(0,600), ylab='Wm-2')
-lines(rollapply(syv.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$SW_IN, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
-plot(rollapply(wcr.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='LW_OUT', ylim=c(0,600), ylab='Wm-2')
-lines(rollapply(syv.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$LW_OUT, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
 wcr.twr$TA_1[wcr.twr$TA_1<(-32)]<-NA
 jumps<-unique(c(which(abs(diff(wcr.twr$TA_1))>10), which(abs(diff(wcr.twr$TA_1))>10)+1))
 wcr.twr$TA_1[jumps]<-NA
 
-plot(rollapply(wcr.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', col='blue', main='TA_1', ylim=c(-20,30), ylab='Wm-2')
-lines(rollapply(syv.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-plot(rollapply(wcr.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE)-rollapply(syv.twr$TA_1, 48*7, FUN='mean', na.rm=TRUE), type='l', ylab='Wm-2')
-abline(h=0, col='red')
-
 ####New work week of Mar 5 - seasonal and daily trends in turb. fluxes, qc check
-mdgs<-which(syv.twr$HOUR<=14 & syv.twr$HOUR>=12 & syv.twr$DOY%in%gs)
+mdgs<-midgs
 brtdrygs<-which(wcr.twr$VPD_PI_1>5 & wcr.twr$SW_IN>200 & wcr.twr$DOY%in%gs)
-
-plot(syv.twr$H_1[brtdrygs]/syv.twr$LE_1[brtdrygs], ylim=c(-0.5,2.5))
-plot(wcr.twr$H_1[brtdrygs]/wcr.twr$LE_1[brtdrygs], ylim=c(-0.5,2.5))
-
-#hourly BR loop, gs
-
-syv.twr.gs<-syv.twr[syv.twr$DOY%in%gs,]
-wcr.twr.gs<-wcr.twr[wcr.twr$DOY%in%gs,]
-
-par(mfrow=c(2,2))
-for(i in 1:24){
-  h=i-1
-  plot(wcr.twr.gs$H_1[wcr.twr$HOUR==h]/wcr.twr.gs$LE_1[wcr.twr$HOUR==h], main=paste('wcr',i-1))
-  #plot(wcr.twr.gs$H_1[wcr.twr$HOUR==h], main=paste('wcr',i-1), pch=18)
-  #points(syv.twr.gs$H_1[syv.twr$HOUR==h], col='red', pch=18, cex=0.5)
-  }
-
-par(mfrow=c(1,2))
 
 #Latent
 
@@ -568,9 +538,9 @@ points(syv.twr.gs$H_1[anom]~syv.twr.gs$HOUR[anom], col='blue')
 points(syv.twr.gs$H_1[anom.syv]~syv.twr.gs$HOUR[anom.syv], col='red')
 
 
-hist(wcr.twr.gs$LE_1[wcr.twr$HOUR%in%midday], breaks=seq(from=-75, to=600, by=25))
+hist(wcr.twr.gs$LE_1[wcr.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
 abline(v=0, col='red')
-hist(syv.twr.gs$LE_1[syv.twr$HOUR%in%midday], breaks=seq(from=-75, to=600, by=25))
+hist(syv.twr.gs$LE_1[syv.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
 abline(v=0, col='red')
 #wcr has a bunch of verly low LE in midday compared to SYV
 
@@ -586,7 +556,7 @@ for(i in 1:24){
 smoothScatter(dat$LE_1~dat$HOUR, ylim=c(-100,650), main='flat clip')
 lines(qs)
 
-qmin<-rep(qs,length(gs), each=2)
+qmin<-rep(qs,length(days), each=2)
 dat$LE_1[dat$LE_1<qmin]<-NA
 
 return(dat)
@@ -594,39 +564,26 @@ return(dat)
 
 wcr.twr.clip<-clipLE(wcr.twr.gs, cut=25, hr=c(8:17), quant=0.05)
 syv.twr.clip<-clipLE(syv.twr.gs, cut=25, hr=c(9:17), quant=0.05)
+
+wcr.twr[gsind,]<-wcr.twr.clip
+syv.twr[gsind,]<-syv.twr.clip
+
 par(mfrow=c(1,2))
 smoothScatter(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
 smoothScatter(syv.twr.gs$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
 smoothScatter(wcr.twr.clip$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
 smoothScatter(syv.twr.clip$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
 
+allpos<-which(wcr.twr$H_1>0 & syv.twr$H_1>0 & wcr.twr$LE_1>0 & syv.twr$LE_1>0)
 
-mean(wcr.twr.clip$LE_1, na.rm=TRUE)
-mean(syv.twr.clip$LE_1, na.rm=TRUE)
+mean(wcr.twr.clip$LE_1[allpos], na.rm=TRUE)
+mean(syv.twr.clip$LE_1[allpos], na.rm=TRUE)
 
-mean(wcr.twr.clip$H_1, na.rm=TRUE)
-mean(syv.twr.clip$H_1, na.rm=TRUE)
+mean(wcr.twr.clip$H_1[allpos], na.rm=TRUE)
+mean(syv.twr.clip$H_1[allpos], na.rm=TRUE)
 
-mean(wcr.twr.clip$H_1/(wcr.twr.clip$H_1+wcr.twr.clip$LE_1), na.rm=TRUE)
-mean(syv.twr.clip$H_1/(syv.twr.clip$H_1+syv.twr.clip$LE_1), na.rm=TRUE)
-
-
-#Negative H's tho
-hpos<-which(wcr.twr.clip$H_1>0 & syv.twr.clip$H_1>0)
-lepos<-which(wcr.twr.clip$LE_1>0 & syv.twr.clip$LE_1>0)
-allpos<-which(wcr.twr.clip$H_1>0 & syv.twr.clip$H_1>0 & wcr.twr.clip$LE_1>0 & syv.twr.clip$LE_1>0)
-
-mean(wcr.twr.clip$H_1[hpos], na.rm=TRUE)
-mean(syv.twr.clip$H_1[hpos], na.rm=TRUE)
-
-mean(wcr.twr.clip$H_1[hpos]/(wcr.twr.clip$H_1[hpos]+wcr.twr.clip$LE_1[hpos]), na.rm=TRUE)
-mean(syv.twr.clip$H_1[hpos]/(syv.twr.clip$H_1[hpos]+syv.twr.clip$LE_1[hpos]), na.rm=TRUE)
-
-mean(wcr.twr.clip$H_1[allpos]/(wcr.twr.clip$H_1[allpos]+wcr.twr.clip$LE_1[allpos]), na.rm=TRUE)
-mean(syv.twr.clip$H_1[allpos]/(syv.twr.clip$H_1[allpos]+syv.twr.clip$LE_1[allpos]), na.rm=TRUE)
-
-mean((wcr.twr.clip$H_1[allpos]+wcr.twr.clip$LE_1[allpos]), na.rm=TRUE)
-mean((syv.twr.clip$H_1[allpos]+syv.twr.clip$LE_1[allpos]), na.rm=TRUE)
+mean(wcr.twr.clip$H_1[allpos]/(wcr.twr.clip$H_1+wcr.twr.clip$LE_1)[allpos], na.rm=TRUE)
+mean(syv.twr.clip$H_1[allpos]/(syv.twr.clip$H_1+syv.twr.clip$LE_1)[allpos], na.rm=TRUE)
 
 
 #Check SW vs PPFD and EB balance
