@@ -5,6 +5,189 @@ library(Hmisc)
 library(zoo)
 #Will hang for a bit after 'ST data ready' Tower data takes a while
 
+
+#Set dataframes
+wcr.twr<-wcr.twr.2016
+syv.twr<-syv.twr.2016
+
+syv.twr.gs<-syv.twr[syv.twr$DOY%in%gs,]
+wcr.twr.gs<-wcr.twr[wcr.twr$DOY%in%gs,]
+
+syv.sap.all.1<-syv.sap.all
+wcr.sap.all.1<-wcr.sap.all
+
+syv.sap.all[syv.sap.all==0]<-NA
+wcr.sap.all[wcr.sap.all==0]<-NA
+
+wcr.td[wcr.td>8]<-NA
+syv.td[syv.td>8]<-NA
+
+
+#Indices used throughout 
+dayhr<-c(8:20)
+midday<-c(12:15)
+dayind<-which(syv.twr$HOUR%in%dayhr) #made earlier; daytime hours
+daymid<-which(syv.twr$HOUR%in%midday)
+
+gs<-c(150:250) #made earlier, growing season days
+gsind<-which(syv.twr$DOY%in%gs)
+
+daygs<-which(syv.twr$HOUR%in%dayhr & syv.twr$DOY%in%gs)
+midgs<-which(syv.twr$HOUR%in%midday & syv.twr$DOY%in%gs)
+
+meas.col<-c(10,11,14:23,25, 27:30) #Columns with non-filled data.
+
+####DF QC#####
+
+#Function to check out missing data
+histmiss<-function(dat){
+  par(mfrow=c(1,2))
+  for(i in meas.col){
+    daylim<-length(which(dat$HOUR==12))
+    if(length(which(is.na(dat[,i])))/nrow(dat)>0.1){
+      hist(dat$HOUR[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=0,to=23,length.out=24), ylim=c(0,daylim))
+      hist(dat$HOUR[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=0,to=23,length.out=24), main=colnames(dat)[i], add=T, col='purple4', ylim=c(0,daylim))
+      hist(dat$DOY[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=1,to=380, by=14), ylim=c(0,672))
+      hist(dat$DOY[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=1,to=380, by=14), main=colnames(dat)[i], add=T, col='black', ylim=c(0,672))
+    } else {print(paste((colnames(dat)[i]), "is missing less than 10% of data"))}
+    
+  }
+}
+
+#First pass; raw tower data
+histmiss(wcr.twr)
+histmiss(syv.twr)
+####gapfill WCR LE in winter####
+#Create gapfill for WCR LE gaps in winter/spring
+wcr.hole<-which(is.na(wcr.twr$LE_1[1:6000]))
+regfill<-coef(lm(syv.twr$LE_1[1:6000]~0+wcr.twr$LE_1[1:6000]))
+wcr.le<-wcr.twr$LE_1
+wcr.le[wcr.hole]<-syv.twr$LE_1[wcr.hole]*regfill[1] #+ regfill[1]
+plot(wcr.twr$LE_1)
+points(wcr.le, col='light blue', pch=18)
+
+#Set LE to gapfilled LE
+wcr.twr$LE_1<-wcr.le #Put in filled LE for WCR
+
+#mini-gapfill (1 hour limit)
+wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
+syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
+histmiss(wcr.twr)
+histmiss(syv.twr)
+
+
+#####EB mis-balance####
+syv.gap<-syv.twr$NETRAD_1-(syv.twr$H_1+syv.twr$LE_1)
+wcr.gap<-wcr.twr$NETRAD_1-(wcr.twr$H_1+wcr.twr$LE_1)
+
+calcdev<-function(gap, co=3){
+  gap.sd<-sd(gap, na.rm=TRUE)
+  gap.err<-which(abs(gap)>(gap.sd*co))
+  return(gap.err)
+}
+syv.err<-calcdev(syv.gap)
+wcr.err<-calcdev(wcr.gap)
+
+wcr.res<-residuals(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1, na.action=na.exclude))
+wcr.res.sd<-sd(wcr.res, na.rm=TRUE)
+wcr.err2<-which(abs(wcr.res)>wcr.res.sd*3)
+syv.res<-residuals(lm((syv.twr$H_1+syv.twr$LE_1)~syv.twr$NETRAD_1, na.action=na.exclude))
+syv.res.sd<-sd(syv.res, na.rm=TRUE)
+syv.err2<-which(abs(syv.res)>syv.res.sd*3)
+
+#####
+plot(wcr.twr$NETRAD_1,(wcr.twr$H_1+wcr.twr$LE_1))
+points(wcr.twr$NETRAD_1[wcr.err2],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err2], col='blue', pch=3, cex=0.7)
+points(wcr.twr$NETRAD_1[wcr.err],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err], col='red', pch=20, cex=0.5)
+abline(0,1, col='red')
+abline(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1), col='blue')
+
+plot(syv.twr$NETRAD_1,(syv.twr$H_1+syv.twr$LE_1))
+abline(0,1, col='red')
+abline(lm((syv.twr$H_1+wcr.twr$LE_1)~syv.twr$NETRAD_1), col='blue')
+points(syv.twr$NETRAD_1[syv.err2],(syv.twr$H_1+syv.twr$LE_1)[syv.err2], col='blue', pch=3, cex=0.7)
+points(syv.twr$NETRAD_1[syv.err],(syv.twr$H_1+syv.twr$LE_1)[syv.err], col='red', pch=20, cex=0.5)
+#####
+syv.twr[syv.err2, c(10:11)]<-NA
+wcr.twr[wcr.err2, c(10:11)]<-NA
+
+wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
+syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
+histmiss(wcr.twr)
+histmiss(syv.twr)
+
+
+#NAN all non-shared values (costly; check data loss)
+syv.nans<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
+wcr.nans<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
+
+syv.twr[is.na(wcr.twr)]<-NA
+wcr.twr[is.na(syv.twr)]<-NA
+
+syv.nans.new<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
+wcr.nans.new<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
+
+syv.exloss<-syv.nans.new-syv.nans
+barplot(sort(syv.exloss[syv.exloss>0.01]), ylim=c(0,0.5))
+wcr.exloss<-wcr.nans.new-wcr.nans
+barplot(sort(wcr.exloss[wcr.exloss>0.01]), ylim=c(0,0.5))
+
+#Mini-fill
+wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
+syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
+histmiss(wcr.twr) #Both towers will have the same missing data now
+
+#Clear out mid-season low LE at WCR####
+#Latent
+
+wcr.twr.gs<-wcr.twr[gsind,]
+syv.twr.gs<-syv.twr[gsind,]
+
+smoothScatter(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
+smoothScatter(syv.twr.gs$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
+
+clipLE<-function(dat, cut=10, quant=0.05, hr=c(9:16), gs=c(150:250)){
+  
+  smoothScatter(dat$LE_1~dat$HOUR, ylim=c(-100,650), main='orig')
+  dat$LE_1[abs(dat$LE_1)<cut & dat$HOUR%in%hr]<-NA
+  qs<-rep(NA, 24)
+  for(i in 1:24){
+    qs[i]<-(quantile(dat$LE_1[wcr.twr.gs$HOUR==(i-1)], quant, na.rm=TRUE))
+  }
+  smoothScatter(dat$LE_1~dat$HOUR, ylim=c(-100,650), main='flat clip')
+  lines(qs)
+  
+  
+  qmin<-rep(qs,length(gs), each=2)
+  print(paste(length(which(dat$LE_1<qmin)), 'points (', length(which(dat$LE_1<qmin))/length(dat$LE_1), 'percent ) removed'))
+  
+  dat$LE_1[dat$LE_1<qmin]<-NA
+  
+  return(dat)
+}
+
+wcr.twr.clip<-clipLE(wcr.twr.gs, cut=25, hr=c(8:17), quant=0.05)
+syv.twr.clip<-clipLE(syv.twr.gs, cut=25, hr=c(9:17), quant=0.05)
+
+smoothScatter(wcr.twr.clip$LE_1~wcr.twr.clip$HOUR, ylim=c(-100,650))
+smoothScatter(syv.twr.clip$LE_1~syv.twr.clip$HOUR, ylim=c(-100,650))
+
+wcr.twr[gsind,]<-wcr.twr.clip
+syv.twr[gsind,]<-syv.twr.clip
+
+
+#mini-gapfill (1 hour limit)
+wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
+syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
+histmiss(wcr.twr)
+
+#####ANALYSES#####
+
+
 #####Explore height thing; get rid of this eventually.####
 
 par(mfrow=c(1,2))
@@ -22,10 +205,6 @@ plot(wcr.forest$height~wcr.forest$dbh, xlim=c(0,100), col=wcr.forest$col, pch=18
 legend(41,19,legend=c('sugar maple', 'hemlock','birch','hophornbeam','basswood','green ash'), 
        col=c('orange','forest green','blue','dark red','yellow','yellow green'), cex=0.7,pch=18)
 
-gs<-c(150:250)
-
-#plot(syv.master[sample(which(syv.master$DOY%in%gs),1000), c(2,sample(10:30, 3), sample(c(1:9, 30:55), 5))])
-
 #####Explore ST relationships alone####
 
 syv.temp<-rowMeans(syv.master[7:10])
@@ -38,21 +217,18 @@ wcr.master$TA_1[jump.a]<-NA
 jump.s<-which(abs(diff(wcr.temp))>8) 
 wcr.temp[jump.s]<-NA
 
-#Raw ST and TA
-plot((syv.temp), type='l')
-lines(syv.master$TA_1, col='red')
-plot((wcr.temp), type='l')
-lines(wcr.master$TA_1, col="red")
+syv.temp[is.na(wcr.temp)]<-NA
+wcr.temp[is.na(syv.temp)]<-NA
 
 #Ts - Ta; negative: surface cooler. Positive: Atm cooler
 syv.td<-syv.temp-syv.master$TA_1
 wcr.td<-wcr.temp-wcr.master$TA_1
 
-#Subset to gs
-gs<-c(150:250)
-
 syv.td.gs<-syv.td[syv.master$DOY%in%gs]
 wcr.td.gs<-wcr.td[wcr.master$DOY%in%gs]
+
+syv.td[is.na(wcr.td)]<-NA
+wcr.td[is.na(syv.td)]<-NA
 
 #WCR difference - SYV difference; negative: more cooling wcr. positive: more cooling syv
 site.cool<-wcr.td.gs - syv.td.gs
@@ -218,7 +394,9 @@ text(4,0.75, "syv more cooling"); text(9,-0.5, "wcr more cooling")
 ####SAPFLUX TRENDS####
 #Site level sums of transp
 syv.sap.all<-rowSums(syv.mega, na.rm=TRUE)
+syv.sap.all[syv.sap.all==0]<-NA
 wcr.sap.all<-rowSums(wcr.mega, na.rm=TRUE)
+syv.sap.all[wcr.sap.all==0]<-NA
 
 plot(wcr.sap.all~wcr.twr.2016$DTIME, col='orange', type='l', xlab='DOY', ylab='sap flow (L/30min)')
 lines(syv.sap.all~wcr.twr.2016$DTIME, col='forest green', type='l')
@@ -278,63 +456,7 @@ abline(v=0)
 
 text(c(-0.2,-0.2,0.28,0.28),c(50000,-20000,50000,-20000), c("wcr cooler+more transp", "wcr cooler+less transp", "wcr warmer+more transp","wcr warmer+less transp"), cex=0.8)
 
-# #giant linear model for funsies
-# library(party)
-# syv.voi<-cbind(syv.master[,31:56], syv.sap.all)
-# syv.voi.q<-syv.voi[,which(colMeans(is.na(syv.voi))<0.05)]
-# syv.voi.spline<-na.spline(syv.voi)
-# #origtest<-cforest(na.spline(syv.td)~., data=syv.voi, control=cforest_unbiased(mtry=2,ntree=50))
-# vars<-varimp(origtest)
-#####
-####At Adrian's suggestion, more basic plotting####
 
-#Set dataframes
-
-wcr.twr<-wcr.twr.2016
-syv.twr<-syv.twr.2016
-wcr.twr$LE_1<-wcr.le #Put in filled LE for WCR
-
-syv.twr.gs<-syv.twr[syv.twr$DOY%in%gs,]
-wcr.twr.gs<-wcr.twr[wcr.twr$DOY%in%gs,]
-
-syv.sap.all.1<-syv.sap.all
-wcr.sap.all.1<-wcr.sap.all
-
-syv.sap.all[syv.sap.all==0]<-NA
-wcr.sap.all[wcr.sap.all==0]<-NA
-
-wcr.td[wcr.td>8]<-NA
-syv.td[syv.td>8]<-NA
-
-
-#Indices used throughout 
-dayhr<-c(8:20)
-midday<-c(12:15)
-dayind<-which(syv.twr$HOUR%in%dayhr) #made earlier; daytime hours
-daymid<-which(syv.twr$HOUR%in%midday)
-
-gs<-gs #made earlier, growing season days
-gsind<-which(syv.twr$DOY%in%gs)
-
-daygs<-which(syv.twr$HOUR%in%dayhr & syv.twr$DOY%in%gs)
-midgs<-which(syv.twr$HOUR%in%midday & syv.twr$DOY%in%gs)
-
-####DF QC#####
-
-#NAN all non-shared values (costly; check data loss)
-syv.nans<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
-wcr.nans<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
-
-syv.twr[is.na(wcr.twr)]<-NA
-wcr.twr[is.na(syv.twr)]<-NA
-
-syv.nans.new<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
-wcr.nans.new<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
-
-syv.exloss<-syv.nans.new-syv.nans
-barplot(syv.exloss[10:length(syv.nans)], ylim=c(0,0.5))
-wcr.exloss<-wcr.nans.new-wcr.nans
-barplot(wcr.exloss[10:length(wcr.nans)], ylim=c(0,0.5))
 
 ######Does sap lag T or vice-versa?#####
 lagplot<-function(temptype='raw',sign,index){
@@ -383,31 +505,29 @@ smoothScatter(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs])
 smoothScatter(syv.twr$LE_1[midgs]~syv.sap.all[midgs])
 smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs])
 
-#T:ET
+par(mfrow=c(2,2))
+smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.sap.all[daygs], ylim=c(0,25), xlim=c(0,650))
+smoothScatter(wcr.twr$VPD_PI_1[daygs]~wcr.sap.all[daygs], ylim=c(0,25), xlim=c(0,650))
+smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.twr$LE_1[daygs], ylim=c(0,25), xlim=c(0,450))
+smoothScatter(wcr.twr$VPD_PI_1[daygs]~wcr.twr$LE_1[daygs], ylim=c(0,25), xlim=c(0,450))
+par(mfrow=c(1,2))
+#####
+####T:ET####
 LE.sap.syv<-(syv.sap.all*2260*1000*1.37)/(6400*1800) #2260: spec. heat water KJ/kg (1kg = 1L); 1000: KJ to Joules; 1.37: surveyed area to total area. 6400: plot (80*80) to m2;  1800: 3o min to s
 plot(syv.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='SYV'); lines(LE.sap.syv)
 t.et.gs.syv<-LE.sap.syv[gsind]/syv.twr$LE_1[gsind]
 t.et.gs.syv[t.et.gs.syv>1 | t.et.gs.syv<0]<-NA
-mean(t.et.gs.syv, na.rm=TRUE) #T:ET of 35% in gs
+mean(t.et.gs.syv, na.rm=TRUE) #T:ET of 32% in gs
 
 LE.sap.wcr<-(wcr.sap.all*2260*1000*1.37)/(6400*1800)
 plot(wcr.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='WCR'); lines(LE.sap.wcr)
+LE.sap.wcr[is.na(LE.sap.syv)]<-NA
 t.et.gs.wcr<-LE.sap.wcr[gsind]/wcr.twr$LE_1[gsind]
 t.et.gs.wcr[t.et.gs.wcr>1 | t.et.gs.wcr<0]<-NA
-mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 38% in gs
-
-
+mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 39% in gs
+#####
 #Explore radiation differences
-
-#NAN all unpaired obs
-#wcr.twr$SW_IN[is.na(syv.twr$SW_IN)]<-NA;syv.twr$SW_IN[is.na(wcr.twr$SW_IN)]<-NA
-#wcr.twr$SW_OUT[is.na(syv.twr$SW_OUT)]<-NA;syv.twr$SW_OUT[is.na(wcr.twr$SW_OUT)]<-NA
-#wcr.twr$LW_IN[is.na(syv.twr$LW_IN)]<-NA;syv.twr$LW_IN[is.na(wcr.twr$LW_IN)]<-NA
-#wcr.twr$LW_OUT[is.na(syv.twr$LW_OUT)]<-NA;syv.twr$LW_OUT[is.na(wcr.twr$LW_OUT)]<-NA
-#wcr.twr$NETRAD_1[is.na(syv.twr$NETRAD_1)]<-NA;syv.twr$NETRAD_1[is.na(wcr.twr$NETRAD_1)]<-NA
-
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
-
 par(mfrow=c(1,3))
 
 #HOUR (diel)
@@ -542,31 +662,6 @@ hist(wcr.twr.gs$LE_1[wcr.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=2
 abline(v=0, col='red')
 hist(syv.twr.gs$LE_1[syv.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
 abline(v=0, col='red')
-#wcr has a bunch of verly low LE in midday compared to SYV
-
-
-clipLE<-function(dat, cut=10, quant=0.05, hr=c(9:16), gs=c(150:250)){
- 
-smoothScatter(dat$LE_1~dat$HOUR, ylim=c(-100,650), main='orig')
-dat$LE_1[abs(dat$LE_1)<cut & dat$HOUR%in%hr]<-NA
-qs<-rep(NA, 24)
-for(i in 1:24){
-  qs[i]<-(quantile(dat$LE_1[wcr.twr.gs$HOUR==(i-1)], quant, na.rm=TRUE))
-}
-smoothScatter(dat$LE_1~dat$HOUR, ylim=c(-100,650), main='flat clip')
-lines(qs)
-
-qmin<-rep(qs,length(days), each=2)
-dat$LE_1[dat$LE_1<qmin]<-NA
-
-return(dat)
-}
-
-wcr.twr.clip<-clipLE(wcr.twr.gs, cut=25, hr=c(8:17), quant=0.05)
-syv.twr.clip<-clipLE(syv.twr.gs, cut=25, hr=c(9:17), quant=0.05)
-
-wcr.twr[gsind,]<-wcr.twr.clip
-syv.twr[gsind,]<-syv.twr.clip
 
 par(mfrow=c(1,2))
 smoothScatter(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
@@ -599,43 +694,6 @@ summary(wcr.cal)
 abline(coef(wcr.cal), col='red')
 abline(coef(syv.cal, col='blue'))
 
-par(mfrow=c(1,2))
-
-syv.gap<-syv.twr$NETRAD_1-(syv.twr$H_1+syv.twr$LE_1)
-wcr.gap<-wcr.twr$NETRAD_1-(wcr.twr$H_1+wcr.twr$LE_1)
-
-calcdev<-function(gap, co=2){
-  gap.sd<-sd(gap, na.rm=TRUE)
-  gap.err<-which(abs(gap)>(gap.sd*co))
-  return(gap.err)
-}
-syv.err<-calcdev(syv.gap)
-wcr.err<-calcdev(wcr.gap)
-
-wcr.res<-residuals(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1, na.action=na.exclude))
-wcr.res.sd<-sd(wcr.res, na.rm=TRUE)
-wcr.err2<-which(abs(wcr.res)>wcr.res.sd*2)
-syv.res<-residuals(lm((syv.twr$H_1+syv.twr$LE_1)~syv.twr$NETRAD_1, na.action=na.exclude))
-syv.res.sd<-sd(syv.res, na.rm=TRUE)
-syv.err2<-which(abs(syv.res)>syv.res.sd*2)
-
-plot(wcr.twr$NETRAD_1,(wcr.twr$H_1+wcr.twr$LE_1))
-points(wcr.twr$NETRAD_1[wcr.err2],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err2], col='blue', pch=3, cex=0.7)
-points(wcr.twr$NETRAD_1[wcr.err],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err], col='red', pch=20, cex=0.5)
-abline(0,1, col='red')
-abline(lm((wcr.twr$H_1+wcr.twr$LE_1)~wcr.twr$NETRAD_1), col='blue')
-
-plot(syv.twr$NETRAD_1,(syv.twr$H_1+syv.twr$LE_1))
-abline(0,1, col='red')
-abline(lm((syv.twr$H_1+wcr.twr$LE_1)~syv.twr$NETRAD_1), col='blue')
-points(syv.twr$NETRAD_1[syv.err2],(syv.twr$H_1+syv.twr$LE_1)[syv.err2], col='blue', pch=3, cex=0.7)
-points(syv.twr$NETRAD_1[syv.err],(syv.twr$H_1+syv.twr$LE_1)[syv.err], col='red', pch=20, cex=0.5)
-
-par(mfrow=c(2,2))
-hist(wcr.twr$HOUR[wcr.err], xlim=c(0,23), ylim=c(0,60), breaks=c(0:23))
-hist(syv.twr$HOUR[syv.err], xlim=c(0,23), ylim=c(0,60), breaks=c(0:23))
-hist(wcr.twr$DOY[wcr.err], xlim=c(0,366), ylim=c(0,60), breaks=seq(from=1, to=366, by=10))
-hist(syv.twr$DOY[syv.err], xlim=c(0,366), ylim=c(0,60), breaks=seq(from=1, to=366, by=10))
 par(mfrow=c(1,2))
 
 #Shortwave alone?
