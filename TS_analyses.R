@@ -587,11 +587,7 @@ abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
 
 ###EB balancing
 plot(wcr.twr$NETRAD_1~wcr.twr$DOY, type='l', main='wcr')
-wcr.twr.lefill<-0.615*syv.twr$LE_1+1.5
-wcr.le<-wcr.twr$LE_1
-wcr.le[which(is.na(wcr.le) & wcr.twr$DOY<150)]<-wcr.twr.lefill[which(is.na(wcr.le) & wcr.twr$DOY<150)]
 lines(wcr.twr$H_1+wcr.le~wcr.twr$DOY, col='red')
-lines(wcr.le~wcr.twr$DOY, col='light blue')
 lines(wcr.twr$LE_1~wcr.twr$DOY, col='blue')
 #lines(wcr.twr$H_1~wcr.twr$DOY, col='red')
 
@@ -628,34 +624,6 @@ wcr.twr$TA_1[jumps]<-NA
 ####New work week of Mar 5 - seasonal and daily trends in turb. fluxes, qc check
 mdgs<-midgs
 brtdrygs<-which(wcr.twr$VPD_PI_1>5 & wcr.twr$SW_IN>200 & wcr.twr$DOY%in%gs)
-
-#Latent
-
-smoothScatter(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
-smoothScatter(syv.twr.gs$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
-
-plot(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
-anom<-which(abs(wcr.twr.gs$H_1/wcr.twr.gs$LE_1)>10)
-points(wcr.twr.gs$LE_1[anom]~wcr.twr.gs$HOUR[anom], col='red')
-
-plot(syv.twr.gs$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
-anom.syv<-which(abs(syv.twr.gs$H_1/syv.twr.gs$LE_1)>10)
-points(syv.twr.gs$LE_1[anom]~syv.twr.gs$HOUR[anom], col='blue')
-points(syv.twr.gs$LE_1[anom.syv]~syv.twr.gs$HOUR[anom.syv], col='red')
-
-#Sensible
-
-smoothScatter(wcr.twr.gs$H_1~wcr.twr.gs$HOUR, ylim=c(-210,500))
-smoothScatter(syv.twr.gs$H_1~syv.twr.gs$HOUR, ylim=c(-210,500))
-
-plot(wcr.twr.gs$H_1~wcr.twr.gs$HOUR, ylim=c(-210,500))
-anom<-which(abs(wcr.twr.gs$H_1/wcr.twr.gs$LE_1)>10)
-points(wcr.twr.gs$H_1[anom]~wcr.twr.gs$HOUR[anom], col='red')
-
-plot(syv.twr.gs$H_1~syv.twr.gs$HOUR, ylim=c(-210,500))
-anom.syv<-which(abs(syv.twr.gs$H_1/syv.twr.gs$LE_1)>10)
-points(syv.twr.gs$H_1[anom]~syv.twr.gs$HOUR[anom], col='blue')
-points(syv.twr.gs$H_1[anom.syv]~syv.twr.gs$HOUR[anom.syv], col='red')
 
 
 hist(wcr.twr.gs$LE_1[wcr.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
