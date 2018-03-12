@@ -211,6 +211,11 @@ syv.temp<-rowMeans(syv.master[7:10])
 wcr.temp<-Lag(rowMeans(wcr.master[7:9]),-2) 
 
 #NAN areas with implausible jumps in temperature
+
+wcr.twr$TA_1[wcr.twr$TA_1<(-32)]<-NA
+jumps<-unique(c(which(abs(diff(wcr.twr$TA_1))>10), which(abs(diff(wcr.twr$TA_1))>10)+1))
+wcr.twr$TA_1[jumps]<-NA
+
 jump.a<-which(abs(diff(wcr.master$TA_1,1))>8) 
 wcr.master$TA_1[jump.a]<-NA
 
@@ -526,7 +531,7 @@ t.et.gs.wcr<-LE.sap.wcr[gsind]/wcr.twr$LE_1[gsind]
 t.et.gs.wcr[t.et.gs.wcr>1 | t.et.gs.wcr<0]<-NA
 mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 39% in gs
 #####
-#Explore radiation differences
+####Explore radiation differences####
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
 par(mfrow=c(1,3))
 
@@ -583,7 +588,7 @@ smoothScatter(wcr.alb[dayind]~wcr.twr$DTIME[dayind], ylim=c(0,1), main='wcr albe
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
 smoothScatter(syv.alb[dayind]~syv.twr$DTIME[dayind], ylim=c(0,1), main='syv albedo', ylab='albedo (SWout / SWin)', xlab='doy')
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
-
+#####
 
 ###EB balancing
 plot(wcr.twr$NETRAD_1~wcr.twr$DOY, type='l', main='wcr')
@@ -604,12 +609,11 @@ syv.hlenorm<-(syv.twr$H_1+syv.twr$LE_1)/syv.twr$NETRAD_1
 syv.hnorm<-syv.twr$H_1/syv.twr$NETRAD_1
 syv.lenorm<-syv.twr$LE_1/syv.twr$NETRAD_1
 
-
 mean(wcr.hlenorm[(wcr.hlenorm)<1 & (wcr.hlenorm)>0], na.rm=TRUE)
 mean(syv.hlenorm[(syv.hlenorm)<1 & (syv.hlenorm)>0], na.rm=TRUE)
 
-mean(wcr.twr$H_1/(wcr.twr$H_1+wcr.le), na.rm=TRUE)
-mean(wcr.le/(wcr.twr$H_1+wcr.le), na.rm=TRUE)
+mean(wcr.twr$H_1/(wcr.twr$H_1+wcr.twr$LE_1), na.rm=TRUE)
+mean(wcr.le/(wcr.twr$H_1+wcr.twr$LE_1), na.rm=TRUE)
 
 mean(syv.twr$H_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
 mean(syv.twr$LE_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
@@ -617,37 +621,19 @@ mean(syv.twr$LE_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
 mean(wcr.twr$WS_1[daygs], na.rm=TRUE)
 mean(syv.twr$WS_1[daygs], na.rm=TRUE)
 
-wcr.twr$TA_1[wcr.twr$TA_1<(-32)]<-NA
-jumps<-unique(c(which(abs(diff(wcr.twr$TA_1))>10), which(abs(diff(wcr.twr$TA_1))>10)+1))
-wcr.twr$TA_1[jumps]<-NA
-
-####New work week of Mar 5 - seasonal and daily trends in turb. fluxes, qc check
+#Indices for avoiding crazy ratios
 mdgs<-midgs
 brtdrygs<-which(wcr.twr$VPD_PI_1>5 & wcr.twr$SW_IN>200 & wcr.twr$DOY%in%gs)
-
-
-hist(wcr.twr.gs$LE_1[wcr.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
-abline(v=0, col='red')
-hist(syv.twr.gs$LE_1[syv.twr$HOUR%in%midday], breaks=seq(from=-100, to=700, by=25), xlab='midday LE')
-abline(v=0, col='red')
-
-par(mfrow=c(1,2))
-smoothScatter(wcr.twr.gs$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
-smoothScatter(syv.twr.gs$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
-smoothScatter(wcr.twr.clip$LE_1~wcr.twr.gs$HOUR, ylim=c(-100,650))
-smoothScatter(syv.twr.clip$LE_1~syv.twr.gs$HOUR, ylim=c(-100,650))
-
 allpos<-which(wcr.twr$H_1>0 & syv.twr$H_1>0 & wcr.twr$LE_1>0 & syv.twr$LE_1>0)
 
-mean(wcr.twr.clip$LE_1[allpos], na.rm=TRUE)
-mean(syv.twr.clip$LE_1[allpos], na.rm=TRUE)
+mean(wcr.twr$LE_1[allpos], na.rm=TRUE)
+mean(syv.twr$LE_1[allpos], na.rm=TRUE)
 
-mean(wcr.twr.clip$H_1[allpos], na.rm=TRUE)
-mean(syv.twr.clip$H_1[allpos], na.rm=TRUE)
+mean(wcr.twr$H_1[allpos], na.rm=TRUE)
+mean(syv.twr$H_1[allpos], na.rm=TRUE)
 
-mean(wcr.twr.clip$H_1[allpos]/(wcr.twr.clip$H_1+wcr.twr.clip$LE_1)[allpos], na.rm=TRUE)
-mean(syv.twr.clip$H_1[allpos]/(syv.twr.clip$H_1+syv.twr.clip$LE_1)[allpos], na.rm=TRUE)
-
+mean(wcr.twr$H_1[allpos]/(wcr.twr.clip$H_1+wcr.twr.clip$LE_1)[allpos], na.rm=TRUE)
+mean(syv.twr$H_1[allpos]/(syv.twr.clip$H_1+syv.twr.clip$LE_1)[allpos], na.rm=TRUE)
 
 #Check SW vs PPFD and EB balance
 plot(syv.twr$SW_IN~syv.twr$PPFD_IN_PI_F_1, pch=18,cex=0.5)
@@ -666,6 +652,8 @@ par(mfrow=c(1,2))
 
 #Shortwave alone?
 smoothScatter(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
+abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
+plot(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
 
 
@@ -716,5 +704,7 @@ syv.sub<-syv.twr
 syv.sub[allneg,]<-NA
 
 plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
+
+plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
 
 
