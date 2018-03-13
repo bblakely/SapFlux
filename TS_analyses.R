@@ -45,11 +45,15 @@ histmiss<-function(dat){
   for(i in meas.col){
     daylim<-length(which(dat$HOUR==12))
     if(length(which(is.na(dat[,i])))/nrow(dat)>0.1){
-      hist(dat$HOUR[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=0,to=23,length.out=24), ylim=c(0,daylim))
-      hist(dat$HOUR[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=0,to=23,length.out=24), main=colnames(dat)[i], add=T, col='purple4', ylim=c(0,daylim))
-      hist(dat$DOY[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=1,to=380, by=14), ylim=c(0,672))
-      hist(dat$DOY[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=1,to=380, by=14), main=colnames(dat)[i], add=T, col='black', ylim=c(0,672))
-    } else {print(paste((colnames(dat)[i]), "is missing less than 10% of data"))}
+      hist(dat$HOUR[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=0,to=23,length.out=25), ylim=c(0,1.1*daylim), xlab='hour')
+      abline(h=daylim)
+      hist(dat$HOUR[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=0,to=23,length.out=25), main=colnames(dat)[i], add=T, col='purple4', ylim=c(0,1.1*daylim), xlab=n)
+      abline(h=daylim)
+      hist(dat$DOY[which(is.na(dat[,i]))], main=colnames(dat)[i], breaks=seq(from=1,to=380, by=14), ylim=c(0,672*1.1), xlab="DOY")
+      abline(h=672)
+      hist(dat$DOY[which(is.na(dat[,i]) & !is.na(rowMeans(dat[meas.col[3:17]], na.rm=TRUE)))], breaks=seq(from=1,to=380, by=14), main=colnames(dat)[i], add=T, col='black', ylim=c(0,672*1.1), xlab=n)
+      abline(h=672)
+      } else {print(paste((colnames(dat)[i]), "is missing less than 10% of data"))}
     
   }
 }
@@ -96,6 +100,9 @@ syv.res<-residuals(lm((syv.twr$H_1+syv.twr$LE_1)~syv.twr$NETRAD_1, na.action=na.
 syv.res.sd<-sd(syv.res, na.rm=TRUE)
 syv.err2<-which(abs(syv.res)>syv.res.sd*3)
 
+wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
+syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
 #####
 plot(wcr.twr$NETRAD_1,(wcr.twr$H_1+wcr.twr$LE_1))
 points(wcr.twr$NETRAD_1[wcr.err2],(wcr.twr$H_1+wcr.twr$LE_1)[wcr.err2], col='blue', pch=3, cex=0.7)
@@ -119,7 +126,7 @@ histmiss(wcr.twr)
 histmiss(syv.twr)
 
 
-#NAN all non-shared values (costly; check data loss)
+####NAN all non-shared values (costly; check data loss)####
 syv.nans<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(syv.twr)
 wcr.nans<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
 
@@ -130,9 +137,9 @@ syv.nans.new<-(sapply(syv.twr, function(y) sum(length(which(is.na(y))))))/nrow(s
 wcr.nans.new<-(sapply(wcr.twr, function(y) sum(length(which(is.na(y))))))/nrow(wcr.twr)
 
 syv.exloss<-syv.nans.new-syv.nans
-barplot(sort(syv.exloss[syv.exloss>0.01]), ylim=c(0,0.5))
+barplot(sort(syv.exloss[syv.exloss>0.01]), ylim=c(0,0.5), las=2, main='SYV (wcr missing)')
 wcr.exloss<-wcr.nans.new-wcr.nans
-barplot(sort(wcr.exloss[wcr.exloss>0.01]), ylim=c(0,0.5))
+barplot(sort(wcr.exloss[wcr.exloss>0.01]), ylim=c(0,0.5), las=2, main='WCR (syv missing)')
 
 #Mini-fill
 wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
@@ -162,7 +169,7 @@ clipLE<-function(dat, cut=10, quant=0.05, hr=c(9:16), gs=c(150:250)){
   
   
   qmin<-rep(qs,length(gs), each=2)
-  print(paste(length(which(dat$LE_1<qmin)), 'points (', length(which(dat$LE_1<qmin))/length(dat$LE_1), 'percent ) removed'))
+  print(paste(length(which(dat$LE_1<qmin)), 'points (', length(which(dat$LE_1<qmin))/length(dat$LE_1)*100, 'percent ) removed'))
   
   dat$LE_1[dat$LE_1<qmin]<-NA
   
@@ -185,8 +192,9 @@ syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
 
 histmiss(wcr.twr)
 
-#####ANALYSES#####
 
+
+#####ANALYSES#####
 
 #####Explore height thing; get rid of this eventually.####
 
@@ -590,7 +598,7 @@ smoothScatter(syv.alb[dayind]~syv.twr$DTIME[dayind], ylim=c(0,1), main='syv albe
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
 #####
 
-###EB balancing
+####EB balancing####
 plot(wcr.twr$NETRAD_1~wcr.twr$DOY, type='l', main='wcr')
 lines(wcr.twr$H_1+wcr.le~wcr.twr$DOY, col='red')
 lines(wcr.twr$LE_1~wcr.twr$DOY, col='blue')
@@ -657,7 +665,7 @@ plot(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
 
 
-#Functionize smoothed plots
+####Smoothed plots####
 
 plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
   
@@ -696,15 +704,21 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
 plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[gsind,],dat2=syv.twr[gsind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
+plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
+
+
+wcr.master$TS<-wcr.temp; colnames(wcr.master)[3]<-'DTIME'; wcr.master$TD<-wcr.td
+syv.master$TS<-syv.temp; colnames(syv.master)[3]<-'DTIME'; syv.master$TD<-syv.td
+
+plotsmooth(dat1=wcr.master,dat2=syv.master, ndays=7,varset=c("TA_1", "TS", "TD", "H_1","NETRAD_1"))
+plotsmooth(dat1=wcr.master[gsind,],dat2=syv.master[gsind,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
+plotsmooth(dat1=wcr.master[daygs,],dat2=syv.master[daygs,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
+plotsmooth(dat1=wcr.master[dayind,],dat2=syv.master[dayind,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
 
 allneg<-which(wcr.twr$H_1<0 | syv.twr$H_1<0 | wcr.twr$LE_1<0 | syv.twr$LE_1<0)
 wcr.sub<-wcr.twr
 wcr.sub[allneg,]<-NA
 syv.sub<-syv.twr
 syv.sub[allneg,]<-NA
-
 plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
-
-plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
-
 
