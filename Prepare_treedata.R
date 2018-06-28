@@ -86,4 +86,9 @@ wcr.calc.rp<-read.csv('WCR_radial.csv')
 syv.tree$MULT_calc<-syv.calc.rp[,24] #Column 24 is the multiplier for actual sapwood area to "effective" sapwood area
 wcr.tree$MULT_calc<-wcr.calc.rp[,24] #i.e. where deeper sapwood with lower flux rates counts for less
 
+#Fill in estimates where we don't have measured SWD
+syv.tree$MULT_meas[syv.tree$meas=='N']<-syv.tree$MULT_calc[syv.tree$meas=='N']
+wcr.tree$MULT_meas[wcr.tree$meas=='N']<-wcr.tree$MULT_calc[wcr.tree$meas=='N']
+
+
 

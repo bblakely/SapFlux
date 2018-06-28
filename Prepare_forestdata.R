@@ -4,10 +4,6 @@ syv.forest<-syv.forest.raw[,1:8]
 syv.forest$species<-as.character(syv.forest$species)
 syv.forest$species[syv.forest$species=='acsa?']<-'acsa'  #assume we were right
 
-#dummy forest file for same allometries
-#syv.forest.dum<-syv.forest
-#syv.forest.dum$SWA<-0.312*syv.forest$dbh^2.07
-
 #Species Allometries
 syv.forest$SWA<-NaN
 
@@ -20,7 +16,7 @@ syv.forest$SWA[syv.forest$species=='frpe']<-0.83*syv.forest$dbh[syv.forest$speci
 #unknowns treated like maple
 syv.forest$SWA[syv.forest$species=='uk']<-0.312*syv.forest$dbh[syv.forest$species=='uk']^2.07
 
-
+syv.forest$SWA[syv.forest$SWA>syv.forest$ba]<-syv.forest$ba[syv.forest$SWA>syv.forest$ba]
 
 syv.forest$SWD<-NaN
 syv.forest$SWD<-(syv.forest$dbh/2)-(sqrt((syv.forest$ba-syv.forest$SWA)/3.14159))
@@ -60,10 +56,6 @@ wcr.forest.raw<-read.csv('WCR_FS.csv')
 wcr.forest<-wcr.forest.raw[,c(1:8, 12)]
 wcr.forest$species<-as.character(wcr.forest$species)
 
-#Making a dummy forest file for all same allometries
-#wcr.forest.dum<-wcr.forest
-#wcr.forest.dum$SWA<-0.312*wcr.forest$dbh^2.07
-
 #Species Allometries
 wcr.forest$SWA<-NaN
 
@@ -78,6 +70,8 @@ wcr.forest$SWA[wcr.forest$species=='quru']<-3.24*wcr.forest$dbh[wcr.forest$speci
 
 #unknowns treated like maple
 wcr.forest$SWA[wcr.forest$species=='uk']<-0.312*wcr.forest$dbh[wcr.forest$species=='uk']^2.07
+
+wcr.forest$SWA[wcr.forest$SWA>wcr.forest$ba]<-wcr.forest$ba[wcr.forest$SWA>wcr.forest$ba]
 
 
 wcr.forest$SWD<-NaN
@@ -100,7 +94,7 @@ wcr.forest$SWA[bigunknown]<-(wcr.forest$ba[bigunknown])-(3.14159*((wcr.forest$db
 Vars<-c('id','species','dbh', 'cc', 'ba','SWA','SWD')
 wcr.forest.dat<-subset(wcr.forest, select=Vars)
 
-write.csv(wcr.forest.dat, 'WCR_FOREST.csv')
+#write.csv(wcr.forest.dat, 'WCR_FOREST.csv')
 
 
 

@@ -14,19 +14,22 @@ rm('syv.forest.raw', 'wcr.forest.raw')#Raw files, not currently using
 assign.color<-function(data, spcol=which(colnames(data)=="species")){
   colvec<-rep("gray", nrow(data))
   spp<-data[,spcol]
-  colvec[spp=='acsa']<-"orange"
-  colvec[spp=='tiam']<-"yellow"
-  colvec[spp=='quru']<-"orange4"
-  colvec[spp=='frpe']<-"yellow green"
-  colvec[spp=='osvi']<-"dark red"
-  colvec[spp=='beal']<-"blue"
-  colvec[spp=='tsca']<-"dark green"
+  colvec[spp=='acsa'|spp=='ACSA']<-"orange"
+  colvec[spp=='tiam'|spp=='TIAM']<-"yellow"
+  colvec[spp=='quru'|spp=='QURU']<-"orange4"
+  colvec[spp=='frpe'|spp=='FRPE']<-"yellow green"
+  colvec[spp=='osvi'|spp=='OSVI']<-"dark red"
+  colvec[spp=='beal'|spp=='BEAL']<-"blue"
+  colvec[spp=='tsca'|spp=='TSCA']<-"dark green"
   data$col<-colvec
   return(data)
 }
 
 syv.forest<-assign.color(syv.forest)
 wcr.forest<-assign.color(wcr.forest)
+
+syv.tree<-assign.color(syv.tree, spcol=3)
+wcr.tree<-assign.color(wcr.tree, spcol=3)
 
 calc.height<-function(data, maxheight, anglecol=which(colnames(data)=="height.angle"), dcol=which(colnames(data)=='distance')){
   if(is.factor(data[,anglecol])){

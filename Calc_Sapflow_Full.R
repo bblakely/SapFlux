@@ -5,11 +5,11 @@ source('Prepare_data.R')
 
 sapstart<-10
 
-syv.tsca<-unname(rowMeans(syv.master[,sapstart+which(syv.tree$SPP=='TSCA')], na.rm=TRUE))
-syv.tsca<-unname(rowMeans(syv.master[,sapstart+which(syv.tree$SPP=='TSCA')], na.rm=TRUE))
+#syv.tsca<-unname(rowMeans(syv.master[,sapstart+which(syv.tree$SPP=='TSCA')], na.rm=TRUE))
+#syv.tsca<-unname(rowMeans(syv.master[,sapstart+which(syv.tree$SPP=='TSCA')], na.rm=TRUE))
 
-
-summ.flux<-function(source,tree,sapcol){
+#Takes mean flux for each species, every timepoint
+summ.flux<-function(source,tree,sapcol){ 
 sapsum<-data.frame(matrix(nrow=nrow(source), ncol=length(unique(tree$SPP))))
 for (i in 1:length(unique(tree$SPP))){
   soi<-as.character(unique(tree$SPP)[i])
@@ -39,3 +39,19 @@ return(mega)
 
 wcr.mega<-modeltrees(wcr.sapsum,wcr.forest)
 syv.mega<-modeltrees(syv.sapsum, syv.forest)
+
+
+#Calculate for actual measured trees
+wcr.site<-sweep(wcr.gap, 2,((wcr.tree$SWA_calc/10000)*wcr.tree$MULT_calc), FUN='*')*1800/1000
+syv.site<-sweep(syv.gap, 2,((syv.tree$SWA_calc/10000)*syv.tree$MULT_calc), FUN='*')*1800/1000
+
+#temporary
+plot(aggregate(syv.site[,1], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
+for(i in 1:ncol(syv.site)){
+    lines(aggregate(syv.site[,i], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col=syv.tree$col[i])
+}
+
+plot(aggregate(wcr.site[,1], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
+for(i in 1:ncol(wcr.site)){
+  lines(aggregate(wcr.site[,i], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col=wcr.tree$col[i])
+}
