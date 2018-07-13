@@ -1,5 +1,5 @@
 
-library(Hmisc) #sometimes you mus run this manually (???)
+library(Hmisc) #sometimes you must run this manually (???)
 library(zoo)
 
 source('Calc_Sapflow_Full.R')
@@ -74,9 +74,14 @@ points(wcr.le, col='light blue', pch=18)
 #Set LE to gapfilled LE
 wcr.twr$LE_1<-wcr.le #Put in filled LE for WCR
 
+#Reset WCR nighttime SW_in NA's to 0 as per consultation with Ankur Desai
+
+wcr.twr$SW_IN[is.na(wcr.twr$SW_IN) & syv.twr$SW_IN<=0]<-0 #Crude, but makes sure only night data are zeroed. 157 day points (1.5%) also get zeroed
+
 #mini-gapfill (1 hour limit)
 wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
 syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
+
 
 histmiss(wcr.twr)
 histmiss(syv.twr)
