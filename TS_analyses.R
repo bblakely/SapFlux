@@ -1,8 +1,9 @@
 
+library(Hmisc) #sometimes you mus run this manually (???)
+library(zoo)
+
 source('Calc_Sapflow_Full.R')
 
-library(Hmisc)
-library(zoo)
 #Will hang for a bit after 'ST data ready' Tower data takes a while
 
 
@@ -695,7 +696,9 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
     
     plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab='Wm-2', ylim=ylim)
     lines(sm2~date, type='l', ylab='Wm-2')
-    plot((sm1-sm2)~date, type='l', ylab='Wm-2')
+    
+    legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
+    plot((sm1-sm2)~date, type='l', ylab='Wm-2', main="Difference")
     abline(h=0, col='red')
     
   }
