@@ -41,17 +41,4 @@ wcr.mega<-modeltrees(wcr.sapsum,wcr.forest)
 syv.mega<-modeltrees(syv.sapsum, syv.forest)
 
 
-#Calculate for actual measured trees
-wcr.site<-sweep(wcr.gap, 2,((wcr.tree$SWA_calc/10000)*wcr.tree$MULT_calc), FUN='*')*1800/1000
-syv.site<-sweep(syv.gap, 2,((syv.tree$SWA_calc/10000)*syv.tree$MULT_calc), FUN='*')*1800/1000
 
-#temporary
-plot(aggregate(syv.site[,1], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
-for(i in 1:ncol(syv.site)){
-    lines(aggregate(syv.site[,i], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col=syv.tree$col[i])
-}
-
-plot(aggregate(wcr.site[,1], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
-for(i in 1:ncol(wcr.site)){
-  lines(aggregate(wcr.site[,i], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col=wcr.tree$col[i])
-}
