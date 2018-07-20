@@ -1,5 +1,5 @@
 #Aggregate to species fluxrates
-source('Prepare_data.R')
+if(exists("wcr.master")==FALSE){source('Prepare_Data.R')}
 
 #Reads in gapfilled files for sapflux rates, in g/m2 s
 

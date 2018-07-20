@@ -1,4 +1,6 @@
 #Questions in think-through
+source("Refine_TowerData.R")
+
 
 #Do WCR maples have more sapwood? More sapwood rel. to basal?
 
@@ -50,23 +52,24 @@ for(i in 1:ncol(wcr.gap)){
 }
 
 
-#Okay, is it greater atmospheric demand?
-plot(syv.twr.2016$VPD_PI_1, type='l');plot(wcr.twr.2016$VPD_PI_1,type='l') #looks similar
 
-plot(syv.twr.2016$VPD_PI_1-wcr.twr.2016$VPD_PI_1, type='l')
-hist(syv.twr.2016$VPD_PI_1-wcr.twr.2016$VPD_PI_1)
+#Okay, is it greater atmospheric demand?
+plot(syv.twr$VPD_PI_1, type='l');plot(wcr.twr$VPD_PI_1,type='l') #looks similar
+
+plot(syv.twr$VPD_PI_1-wcr.twr$VPD_PI_1, type='l')
+hist(syv.twr$VPD_PI_1-wcr.twr$VPD_PI_1)
 
 gs<-c(152:243) #Jun to Aug, peakish season
-hist(syv.twr.2016$VPD_PI_1[syv.twr.2016$DOY%in%gs]-wcr.twr.2016$VPD_PI_1[wcr.twr.2016$DOY%in%gs], xlim=c(-20,20))
-mean(syv.twr.2016$VPD_PI_1[syv.twr.2016$DOY%in%gs]-wcr.twr.2016$VPD_PI_1[wcr.twr.2016$DOY%in%gs], na.rm=TRUE)
+hist(syv.twr$VPD_PI_1[syv.twr$DOY%in%gs]-wcr.twr$VPD_PI_1[wcr.twr$DOY%in%gs], xlim=c(-20,20))
+mean(syv.twr$VPD_PI_1[syv.twr$DOY%in%gs]-wcr.twr$VPD_PI_1[wcr.twr$DOY%in%gs], na.rm=TRUE)
 
 #Nope, VPD is *higher* at SYV actually, even more so in GS
 
 #Leaf temperature is higher at WCR, maybe that matters?
 wcr.temps<-rowMeans(wcr.ap[,7:10]);syv.temps<-rowMeans(syv.ap[,7:10])
 
-hist(syv.temps-wcr.temps);hist(syv.temps[syv.twr.2016$DOY%in%gs]-wcr.temps[wcr.twr.2016$DOY%in%gs])
-mean(syv.temps-wcr.temps, na.rm=TRUE);mean(syv.temps[syv.twr.2016$DOY%in%gs]-wcr.temps[wcr.twr.2016$DOY%in%gs], na.rm=TRUE)
+hist(syv.temps-wcr.temps);hist(syv.temps[syv.twr$DOY%in%gs]-wcr.temps[wcr.twr$DOY%in%gs])
+mean(syv.temps-wcr.temps, na.rm=TRUE);mean(syv.temps[syv.twr$DOY%in%gs]-wcr.temps[wcr.twr$DOY%in%gs], na.rm=TRUE)
 
 #half a degree difference year-round, quarter of a degree difference in GS
 
@@ -76,42 +79,42 @@ plot(rowMeans(wcr.gap[,wcr.tree$SPP=='ACSA'&wcr.tree$CC=='C'], na.rm=TRUE)-rowMe
 
 maplediff<-(rowMeans(wcr.gap[,wcr.tree$SPP=='ACSA'&wcr.tree$CC=='C'])-rowMeans(syv.gap[,syv.tree$SPP=='ACSA'&syv.tree$CC=='C']))
 tempdiff<-syv.temps-wcr.temps
-vpddiff<-syv.twr.2016$VPD_PI_1-wcr.twr.2016$VPD_PI_1
+vpddiff<-syv.twr$VPD_PI_1-wcr.twr$VPD_PI_1
 
-plot(maplediff~tempdiff);plot(maplediff[syv.twr.2016$DOY%in%gs]~tempdiff[syv.twr.2016$DOY%in%gs])
-smoothScatter(maplediff~tempdiff);smoothScatter(maplediff[syv.twr.2016$DOY%in%gs]~tempdiff[syv.twr.2016$DOY%in%gs])
+plot(maplediff~tempdiff);plot(maplediff[syv.twr$DOY%in%gs]~tempdiff[syv.twr$DOY%in%gs])
+smoothScatter(maplediff~tempdiff);smoothScatter(maplediff[syv.twr$DOY%in%gs]~tempdiff[syv.twr$DOY%in%gs])
 #okay it really doesn't look like a temp thing...
 
-plot(maplediff~vpddiff);plot(maplediff[syv.twr.2016$DOY%in%gs]~vpddiff[syv.twr.2016$DOY%in%gs])
-smoothScatter(maplediff[syv.twr.2016$HOUR %in% c(10:15)]~vpddiff[syv.twr.2016$HOUR %in% c(10:15)]);smoothScatter(maplediff[syv.twr.2016$DOY%in%gs & syv.twr.2016$HOUR %in% c(10:15)]~vpddiff[syv.twr.2016$DOY%in%gs & syv.twr.2016$HOUR %in% c(10:15)])
+plot(maplediff~vpddiff);plot(maplediff[syv.twr$DOY%in%gs]~vpddiff[syv.twr$DOY%in%gs])
+smoothScatter(maplediff[syv.twr$HOUR %in% c(10:15)]~vpddiff[syv.twr$HOUR %in% c(10:15)]);smoothScatter(maplediff[syv.twr$DOY%in%gs & syv.twr$HOUR %in% c(10:15)]~vpddiff[syv.twr$DOY%in%gs & syv.twr$HOUR %in% c(10:15)])
 
-lm((maplediff[syv.twr.2016$DOY%in%gs & syv.twr.2016$HOUR %in% c(10:15)]~vpddiff[syv.twr.2016$DOY%in%gs & syv.twr.2016$HOUR %in% c(10:15)]))$coefficients
+lm((maplediff[syv.twr$DOY%in%gs & syv.twr$HOUR %in% c(10:15)]~vpddiff[syv.twr$DOY%in%gs & syv.twr$HOUR %in% c(10:15)]))$coefficients
 
-#interestingly, the difference in maple transp *increases* as syv vpd gets further above wcr vpd. Perhaps a covariate?
+#interestingly, the difference in maple transp (maybe) *increases* as syv vpd gets further above wcr vpd. Perhaps a covariate?
 #either way, more proof that VPD is not driving differences, unless it's water-stress related
 
 #Make a daytime gs vector
-daygs<-which(syv.twr.2016$DOY%in%gs & syv.twr.2016$HOUR %in% c(10:15))
+daygs<-which(syv.twr$DOY%in%gs & syv.twr$HOUR %in% c(10:15))
 #Let's check on water stress
 par(mfrow=c(2,2))
 par(mar=c(2,2,2,2))
 for (i in c(1:14)){
-smoothScatter(wcr.gap[daygs,i]~wcr.twr.2016$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=colnames(wcr.gap)[i], ylim=c(0,100))
+smoothScatter(wcr.gap[daygs,i]~wcr.twr$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=colnames(wcr.gap)[i], ylim=c(0,100))
 }
 
 #codom maples only, wcr
 for (i in which(wcr.tree$SPP=='ACSA'& wcr.tree$CC=="C")){
-  smoothScatter(wcr.gap[daygs,i]~wcr.twr.2016$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=paste('wcr',colnames(wcr.gap)[i]), ylim=c(0,100))
+  smoothScatter(wcr.gap[daygs,i]~wcr.twr$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=paste('wcr',colnames(wcr.gap)[i]), ylim=c(0,100))
 }
 
 #codom maples only, syv
 for (i in which(syv.tree$SPP=='ACSA'& syv.tree$CC=="C")){
-  smoothScatter(syv.gap[daygs,i]~syv.twr.2016$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=paste('syv',colnames(syv.gap)[i]), ylim=c(0,100))
+  smoothScatter(syv.gap[daygs,i]~syv.twr$VPD_PI_1[daygs], xlab='vpd',ylab='flux', main=paste('syv',colnames(syv.gap)[i]), ylim=c(0,100))
 }
 
 #Check soil moist diffs
-mean(syv.twr.2016$SWC_1[daygs], na.rm=TRUE);mean(wcr.twr.2016$SWC_1[daygs], na.rm=TRUE)
-mean(syv.twr.2016$SWC_1_2_1[daygs], na.rm=TRUE);mean(wcr.twr.2016$SWC_1_2_1[daygs], na.rm=TRUE)
+mean(syv.twr$SWC_1[daygs], na.rm=TRUE);mean(wcr.twr$SWC_1[daygs], na.rm=TRUE)
+mean(syv.twr$SWC_1_2_1[daygs], na.rm=TRUE);mean(wcr.twr$SWC_1_2_1[daygs], na.rm=TRUE)
 
 #Alright, syv is drier. So higher vpd and lower soil moisture. 
 #More latent heat flux though - WCR trapping moisture better? T:ET is higher as well.
@@ -124,19 +127,19 @@ mean(syv.twr.2016$SWC_1_2_1[daygs], na.rm=TRUE);mean(wcr.twr.2016$SWC_1_2_1[dayg
 #Okay let's try for hysteresis. this will be complex. Make this a function when no in a hurrt
 dry<-8 #vpd cutoff for dryish days
 syv.maple<-syv.gap[syv.tree$SPP=='ACSA' & syv.tree$CC =='C']
-syv.dryind<-which(syv.twr.2016$VPD_PI_1>dry & syv.twr.2016$DOY%in%gs)
+syv.dryind<-which(syv.twr$VPD_PI_1>dry & syv.twr$DOY%in%gs)
 
 wcr.maple<-wcr.gap[wcr.tree$SPP=='ACSA' & wcr.tree$CC =='C']
-wcr.dryind<-which(wcr.twr.2016$VPD_PI_1>dry & wcr.twr.2016$DOY%in%gs)
+wcr.dryind<-which(wcr.twr$VPD_PI_1>dry & wcr.twr$DOY%in%gs)
 
 #smoothScatter(rowMeans(syv.maple)[syv.dryind]~syv.ts$HOUR[syv.dryind])
 #smoothScatter(rowMeans(wcr.maple)[wcr.dryind]~wcr.ts$HOUR[wcr.dryind])
 
-syv.dryhour<-aggregate(rowMeans(syv.maple)[syv.dryind], by=list(syv.twr.2016$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
-wcr.dryhour<-aggregate(rowMeans(wcr.maple)[wcr.dryind], by=list(wcr.twr.2016$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
+syv.dryhour<-aggregate(rowMeans(syv.maple)[syv.dryind], by=list(syv.twr$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
+wcr.dryhour<-aggregate(rowMeans(wcr.maple)[wcr.dryind], by=list(wcr.twr$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
 
-syv.dryvp<-aggregate(syv.twr.2016$VPD_PI_1[syv.dryind], by=list(syv.twr.2016$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
-wcr.dryvp<-aggregate(wcr.twr.2016$VPD_PI_1[wcr.dryind], by=list(wcr.twr.2016$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
+syv.dryvp<-aggregate(syv.twr$VPD_PI_1[syv.dryind], by=list(syv.twr$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
+wcr.dryvp<-aggregate(wcr.twr$VPD_PI_1[wcr.dryind], by=list(wcr.twr$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
 
 colcode<-rep('black', 24)
 colcode[7:13]<-"orange"
@@ -144,6 +147,8 @@ colcode[13:22]<-"blue"
 
 par(mfrow=c(2,2))
 par(mar=c(4,4,4,2))
+daytime<-c(7:22)
+
 plot(syv.dryhour$x~syv.dryvp$x, col=colcode[syv.dryhour$Group.1], ylim=c(0,75), xlim=c(8,16), xlab="VPD", ylab="Flux rate", main='SYV');lines(syv.dryhour$x~syv.dryvp$x);
 plot(wcr.dryhour$x~wcr.dryvp$x, col=colcode[wcr.dryhour$Group.1], ylim=c(0,75), xlim=c(8,16), xlab="VPD", ylab="Flux rate", main='WCR');lines(wcr.dryhour$x~wcr.dryvp$x)
 
@@ -151,42 +156,61 @@ plot(wcr.dryhour$x~wcr.dryvp$x, col=colcode[wcr.dryhour$Group.1], ylim=c(0,75), 
 plot((syv.dryhour$x/max(syv.dryhour$x))~syv.dryvp$x, col=colcode[syv.dryhour$Group.1], ylim=c(0,1), xlim=c(5,16), xlab="VPD", ylab="Flux rate", main='SYV');lines(syv.dryhour$x/max(syv.dryhour$x)~syv.dryvp$x)
 plot(wcr.dryhour$x/max(wcr.dryhour$x)~wcr.dryvp$x, col=colcode[wcr.dryhour$Group.1], ylim=c(0,1), xlim=c(5,16), xlab="VPD", ylab="Flux rate", main='WCR');lines(wcr.dryhour$x/max(wcr.dryhour$x)~wcr.dryvp$x)
 
+#Both normalized (this does not work for no reason?)
+syv.hrn<-(syv.dryhour$x/max(syv.dryhour$x))
+syv.vpdn<-(syv.dryvp$x/max(syv.dryvp$x))
+plot(syv.hrn~syv.vpdn, col=colcode[syv.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='SYV');lines(syv.hrn~syv.vpdn)
+
+wcr.hrn<-(wcr.dryhour$x/max(wcr.dryhour$x))
+wcr.vpdn<-(wcr.dryvp$x/max(wcr.dryvp$x))
+plot(wcr.hrn~wcr.vpdn, col=colcode[wcr.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='WCR');lines(wcr.hrn~wcr.vpdn)
+
+
 #Okay cool so strong case for some effect of water stress - larger differences at high VPD, greater hysteresis at SYV
 
 #Let's actually get area...
 
+#Only sap normalized
 library(pracma)
-polyarea(wcr.dryhour$x/max(wcr.dryhour$x),wcr.dryvp$x)
-polyarea((syv.dryhour$x/max(syv.dryhour$x))[syv.dryhour$Group.1%in%c(7:22)],syv.dryvp$x[syv.dryhour$Group.1%in%c(7:22)]) #eliminate nighttime values from syv polygon
+polyarea(wcr.dryhour$x/max(wcr.dryhour$x),wcr.dryvp$x);polyarea((syv.dryhour$x/max(syv.dryhour$x))[syv.dryhour$Group.1%in%c(7:22)],syv.dryvp$x[syv.dryhour$Group.1%in%c(7:22)]) #eliminate nighttime values from syv polygon
+polyarea(wcr.dryhour$x/max(wcr.dryhour$x),wcr.dryvp$x)/polyarea((syv.dryhour$x/max(syv.dryhour$x))[syv.dryhour$Group.1%in%c(7:22)],syv.dryvp$x[syv.dryhour$Group.1%in%c(7:22)]) #eliminate nighttime values from syv polygon
+
+#vpd also normalized
+polyarea(wcr.hrn,wcr.vpdn);polyarea(syv.hrn[daytime], syv.vpdn[daytime])
+polyarea(wcr.hrn,wcr.vpdn)/polyarea(syv.hrn[daytime], syv.vpdn[daytime])
+
+#similar story with both normalized, somewhat less difference
+
+
 
 #How does humidity differ? Apparently we don't have this data. 
 #But WCR VPD < SYV VPD despite WCR Temp > SYV Temp would indicate WCR humid > SYV humid
 
 #recheck netrad/swin
-mean(syv.twr.2016$NETRAD_1[daygs], na.rm=TRUE)
-mean(wcr.twr.2016$NETRAD_1[daygs], na.rm=TRUE)
+mean(syv.twr$NETRAD_1[daygs], na.rm=TRUE)
+mean(wcr.twr$NETRAD_1[daygs], na.rm=TRUE)
 
-mean(syv.twr.2016$SW_IN[daygs], na.rm=TRUE)
-mean(wcr.twr.2016$SW_IN[daygs], na.rm=TRUE)
+mean(syv.twr$SW_IN[daygs], na.rm=TRUE)
+mean(wcr.twr$SW_IN[daygs], na.rm=TRUE)
 
-t.test(syv.twr.2016$SW_IN[daygs],wcr.twr.2016$SW_IN[daygs]) #NOT significant
-t.test(syv.twr.2016$NETRAD_1[daygs],wcr.twr.2016$NETRAD_1[daygs]) #Definitely significant
-t.test(syv.twr.2016$LW_IN[daygs],wcr.twr.2016$LW_IN[daygs]) #Very Significant, but effect is small, <15 W/m^2
-t.test(syv.twr.2016$LW_IN[daygs]+syv.twr.2016$SW_IN[daygs],wcr.twr.2016$LW_IN[daygs]+wcr.twr.2016$SW_IN[daygs]) #Barely Significant, 3 to 44 W/m^2
+t.test(syv.twr$SW_IN[daygs],wcr.twr$SW_IN[daygs]) #NOT significant
+t.test(syv.twr$NETRAD_1[daygs],wcr.twr$NETRAD_1[daygs]) #Definitely significant
+t.test(syv.twr$LW_IN[daygs],wcr.twr$LW_IN[daygs]) #Very Significant, but effect is small, <15 W/m^2
+t.test(syv.twr$LW_IN[daygs]+syv.twr$SW_IN[daygs],wcr.twr$LW_IN[daygs]+wcr.twr$SW_IN[daygs]) #Barely Significant, 3 to 44 W/m^2
 
 #All of this is consistent with slightly greater cloudiness at WCR
 
 #With wcr zeros included
-syv.twr.zeroes<-syv.twr.2016
+syv.twr.zeroes<-syv.twr
 syv.twr.zeroes$SW_IN[syv.twr.zeroes$SW_IN<0]<-0
 
-wcr.twr.zeroes<-wcr.twr.2016
+wcr.twr.zeroes<-wcr.twr
 wcr.twr.zeroes$SW_IN[is.na(wcr.twr.zeroes$SW_IN) & (wcr.twr.zeroes$HOUR<10 | wcr.twr.zeroes$HOUR>17)]<-0
 
 t.test(syv.twr.zeroes$SW_IN[daygs],wcr.twr.zeroes$SW_IN[daygs]) #NOT significant
 t.test(syv.twr.zeroes$NETRAD_1[daygs],wcr.twr.zeroes$NETRAD_1[daygs]) #Definitely significant
 t.test(syv.twr.zeroes$LW_IN[daygs],wcr.twr.zeroes$LW_IN[daygs]) #Very Significant, but effect is small, <15 W/m^2
-t.test(syv.twr.zeroes$LW_IN[daygs]+syv.twr.zeroes$SW_IN[daygs],wcr.twr.zeroes$LW_IN[daygs]+wcr.twr.zeroes$SW_IN[daygs]) #Barely Significant, 3 to 44 W/m^2
+t.test(syv.twr.zeroes$LW_IN[daygs]+syv.twr.zeroes$SW_IN[daygs],wcr.twr.zeroes$LW_IN[daygs]+wcr.twr.zeroes$SW_IN[daygs]) #somewhat Significant, 5 to 46 W/m^2
 
 #Basically same story
 
