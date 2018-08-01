@@ -7,15 +7,15 @@ source('Refine_TowerData.R')
 
 #Will hang for a bit after 'ST data ready' Tower data takes a while
 
-
-syv.sap.all.1<-syv.sap.all
-wcr.sap.all.1<-wcr.sap.all
-
-syv.sap.all[syv.sap.all==0]<-NA
-wcr.sap.all[wcr.sap.all==0]<-NA
-
-wcr.td[wcr.td>8]<-NA
-syv.td[syv.td>8]<-NA
+# 
+# syv.sap.all.1<-syv.sap.all
+# wcr.sap.all.1<-wcr.sap.all
+# 
+# syv.sap.all[syv.sap.all==0]<-NA
+# wcr.sap.all[wcr.sap.all==0]<-NA
+# 
+# wcr.td[wcr.td>8]<-NA
+# syv.td[syv.td>8]<-NA
 
 
 #####ANALYSES#####
@@ -36,6 +36,12 @@ plot(syv.forest$height~syv.forest$dbh, xlim=c(0,100), col=syv.forest$col, pch=18
 plot(wcr.forest$height~wcr.forest$dbh, xlim=c(0,100), col=wcr.forest$col, pch=18)
 legend(41,19,legend=c('sugar maple', 'hemlock','birch','hophornbeam','basswood','green ash'), 
        col=c('orange','forest green','blue','dark red','yellow','yellow green'), cex=0.7,pch=18)
+
+#WCR has much higher height:dbh ratio
+#Species cluseter in height/dbh space, with different slopes
+#If allocating to height, less sapwood area, same leaf area = faster flux
+#Try fitting lines through these to quantify, both at site level and at species level
+
 
 #####Explore ST relationships alone####
 
@@ -80,6 +86,8 @@ plot(syv.td.gs.d, type='l', main='gs diel difference', ylim=c(-3,2), lwd=2, xlab
 lines(wcr.td.gs.d, col='blue', lwd=2)
 abline(h=0, col='red')
 legend(0,2,legend=c("Ts - Ta WCR", "Ts - Ta SYV"), col=c('blue', 'black'), lwd=2, cex=0.8)
+#SYV warms up faster in the morning; both are similar for most of rest of day
+#trysmoothScatter(syv.td.gs~syv.ts$H[syv.ts$DOY%in%gs])
 
 #Diel, whole year
 syv.td.d<-aggregate(syv.td,by=list(wcr.master$H), FUN="mean", na.rm=TRUE)
@@ -87,6 +95,7 @@ wcr.td.d<-aggregate(wcr.td,by=list(wcr.master$H), FUN="mean", na.rm=TRUE)
 plot(syv.td.d, type='l', main='year diel difference', ylim=c(-3,2), lwd=2)
 lines(wcr.td.d, col='blue', lwd=2)
 abline(h=0, col='red')
+#Same thing persists in the year-round but wcr gets much hotter at midday with other seasons included
 
 #Monthly, whole day
 syv.td.m<-aggregate(syv.td,by=list(wcr.twr.2016$MONTH), FUN="mean", na.rm=TRUE)
@@ -105,6 +114,9 @@ plot(syv.td.m, type='l', main='year monthly difference, day only (note scale)', 
 lines(wcr.td.m, col='blue', lwd=2)
 abline(h=0, col='red')
 legend(6,2,legend=c("Ts - Ta WCR", "Ts - Ta SYV"), col=c('blue', 'black'), lwd=2, cex=0.8)
+#in both, wcr warmer in spring (especially) and fall. WCR cooler in summer
+#Could this be solar energy is high in spring but no leaves to dissipate?
+
 
 ##Difference in differences
 #Diel, growing season
@@ -118,6 +130,8 @@ site.cool.dy<-aggregate(wcr.td-syv.td,by=list(wcr.master$H), FUN="mean", na.rm=T
 plot(site.cool.dy, type='l', main='year diel site difference', ylim=c(-1,1), xlab="hour")
 abline(h=0,col='red')
 text(4,0.5, "syv more cooling"); text(15,-0.5, "wcr more cooling")
+#Growing season and year are quite different; in gs, wcr does as much midday cooling as syv. Not so in whole year
+#Always wcr does more morning cooling though.
 
 #Monthly
 site.cool.m<-aggregate(wcr.td-syv.td,by=list(wcr.twr.2016$MONTH), FUN="mean", na.rm=TRUE)
@@ -130,7 +144,7 @@ site.cool.m<-aggregate(wcr.td[dayind]-syv.td[dayind],by=list(wcr.twr.2016$MONTH[
 plot(site.cool.m, type='l', main='monthly site difference, day (note scale)', ylim=c(-1,1), xlab="month")
 abline(h=0,col='red')
 text(4,0.75, "syv more cooling"); text(9,-0.5, "wcr more cooling")
-
+#Daytime just enhances overall pattern; implies daytime differences are not much offset by opposite nighttime differences
 
 #####Decompositions####
 # #Strip names
@@ -237,6 +251,8 @@ syv.sap.all[wcr.sap.all==0]<-NA
 
 plot(wcr.sap.all~wcr.twr.2016$DTIME, col='orange', type='l', xlab='DOY', ylab='sap flow (L/30min)')
 lines(syv.sap.all~wcr.twr.2016$DTIME, col='forest green', type='l')
+#Nice plot to show sapflow differences if enhanced
+
 
 #The month column has a dumb name left over from subsetting
 colnames(syv.master)[2]<-'MONTH'
@@ -280,7 +296,6 @@ legend(1,200000,legend=c('wcr','syv, scaled months','syv, splined months'),col=c
 plot(wcr.sap.month$x-na.spline(syv.sap.month$x), type='l')
 abline(h=0, col='red')
 
-
 #Plot comparing differences in sapflux and differences in temperature. 
 col.y=c('gray','red','orange','yellow','green','dark green','light blue','blue','purple','orange4','black','pink')
 col.live=c('red','orange','yellow','green','blue','purple')
@@ -292,7 +307,8 @@ abline(h=0)
 abline(v=0)
 
 text(c(-0.2,-0.2,0.28,0.28),c(50000,-20000,50000,-20000), c("wcr cooler+more transp", "wcr cooler+less transp", "wcr warmer+more transp","wcr warmer+less transp"), cex=0.8)
-
+#Cool plot, need to work out how to clean up. 
+#Check out how this corresponds to leaf area.
 
 
 ######Does sap lag T or vice-versa?#####
@@ -323,6 +339,8 @@ par(mfrow=c(1,2))
 lagplot("raw","negative",daygs)
 lagplot("diff","negative",daygs)
 #Best matches with sap lagged 30 min -hours, i.e. temps are driving sapflux
+#Indicate a feedback?
+
 #####
 ####Bowen Ratio####
 syv.bowen<-syv.twr$H_1/syv.twr$LE_1 ; syv.bowen[syv.bowen>20 | syv.bowen<(-2)]<-NA
@@ -338,6 +356,9 @@ abline(v=0, col='red')
 
 smoothScatter(syv.twr$LE_1[daygs]~syv.sap.all[daygs])
 smoothScatter(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs])
+#Sapflux is lower limit of LE
+#Make a fit line
+#Space above is evap contribution probably; does SYV have more evap?
 
 smoothScatter(syv.twr$LE_1[midgs]~syv.sap.all[midgs])
 smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs])
@@ -345,9 +366,13 @@ smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs])
 par(mfrow=c(2,2))
 smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.sap.all[daygs], ylim=c(0,25), xlim=c(0,650))
 smoothScatter(wcr.twr$VPD_PI_1[daygs]~wcr.sap.all[daygs], ylim=c(0,25), xlim=c(0,650))
+#Sapflux almost linearly related to VPD
+#Relationship between LE and VPD is tighter at WCR
 smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.twr$LE_1[daygs], ylim=c(0,25), xlim=c(0,450))
 smoothScatter(wcr.twr$VPD_PI_1[daygs]~wcr.twr$LE_1[daygs], ylim=c(0,25), xlim=c(0,450))
 par(mfrow=c(1,2))
+
+
 #####
 ####T:ET####
 LE.sap.syv<-(syv.sap.all*2260*1000*1.37)/(6400*1800) #2260: spec. heat water KJ/kg (1kg = 1L); 1000: KJ to Joules; 1.37: surveyed area to total area. 6400: plot (80*80) to m2;  1800: 3o min to s
@@ -362,6 +387,9 @@ LE.sap.wcr[is.na(LE.sap.syv)]<-NA
 t.et.gs.wcr<-LE.sap.wcr[gsind]/wcr.twr$LE_1[gsind]
 t.et.gs.wcr[t.et.gs.wcr>1 | t.et.gs.wcr<0]<-NA
 mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 39% in gs
+#Definitely use these
+#Combined with vpd, this might mean eco controls LE more tightly at WCR
+
 #####
 ####Explore radiation differences####
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
@@ -420,6 +448,12 @@ smoothScatter(wcr.alb[dayind]~wcr.twr$DTIME[dayind], ylim=c(0,1), main='wcr albe
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
 smoothScatter(syv.alb[dayind]~syv.twr$DTIME[dayind], ylim=c(0,1), main='syv albedo', ylab='albedo (SWout / SWin)', xlab='doy')
 abline(h=c(0,0.1,0.2,0.3,0.4), lty=3)
+
+smoothScatter((wcr.alb[dayind]-syv.alb[dayind])~wcr.twr$DTIME[dayind], ylim=c(-1,1))
+abline(h=0)
+#This will be useful for showing mesophication, if that's the way I go
+#It supplements sap flux in summer, agreeng with decreased temps
+#But it counters higher temps in winter.
 #####
 
 ####EB balancing####
@@ -432,6 +466,7 @@ plot(syv.twr$NETRAD_1~syv.twr$DOY, type='l', main='syv')
 lines(syv.twr$H_1+syv.twr$LE_1~syv.twr$DOY, col='red')
 lines(syv.twr$LE_1~syv.twr$DOY, col='blue')
 #lines(syv.twr$H_1~syv.twr$DOY, col='red')
+#Try getting these into bars
 
 wcr.hlenorm<-(wcr.twr$H_1+wcr.le)/wcr.twr$NETRAD_1
 wcr.hnorm<-wcr.twr$H_1/wcr.twr$NETRAD_1
@@ -449,9 +484,11 @@ mean(wcr.le/(wcr.twr$H_1+wcr.twr$LE_1), na.rm=TRUE)
 
 mean(syv.twr$H_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
 mean(syv.twr$LE_1/(syv.twr$H_1+syv.twr$LE_1), na.rm=TRUE)
+#LE as portion of HLE much higher at SYV
 
 mean(wcr.twr$WS_1[daygs], na.rm=TRUE)
 mean(syv.twr$WS_1[daygs], na.rm=TRUE)
+#Slightly windier at SYV; supports roughness/atmospheric transport
 
 #Indices for avoiding crazy ratios
 mdgs<-midgs
@@ -466,6 +503,7 @@ mean(syv.twr$H_1[allpos], na.rm=TRUE)
 
 mean(wcr.twr$H_1[allpos]/(wcr.twr.clip$H_1+wcr.twr.clip$LE_1)[allpos], na.rm=TRUE)
 mean(syv.twr$H_1[allpos]/(syv.twr.clip$H_1+syv.twr.clip$LE_1)[allpos], na.rm=TRUE)
+#Sensible heat a bigger part of H+LE at WCR
 
 #Check SW vs PPFD and EB balance
 plot(syv.twr$SW_IN~syv.twr$PPFD_IN_PI_F_1, pch=18,cex=0.5)
@@ -487,6 +525,7 @@ smoothScatter(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
 plot(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
+
 
 
 ####Smoothed plots####
@@ -548,3 +587,105 @@ syv.sub<-syv.twr
 syv.sub[allneg,]<-NA
 plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 
+#Some linear modeling?
+
+
+saps<-rowSums(wcr.mega)
+flux<-rowMeans(wcr.gap)
+vpd<-wcr.twr$VPD_PI_1
+vpd[which(vpd==Inf)]<-NA
+
+#what am I doing I need to focus on temp..
+
+midday<-which(wcr.ts$HOUR==14& wcr.ts$MIN== 0 & wcr.ts$DOY%in%gs) #2:00 every day; peakish
+
+plot(wcr.td[midday]~saps[midday])
+saponly<-lm(wcr.td[midday]~saps[midday])
+summary(saponly)
+#plot(saponly)
+
+plot(wcr.td[midday]~wcr.twr$NETRAD[midday])
+radonly<-lm(wcr.td[midday]~wcr.twr$NETRAD[midday])
+summary(radonly)
+#plot(radonly)
+
+plot(wcr.td[midday]~wcr.twr$USTAR[midday])
+roughonly<-lm(wcr.td[midday]~wcr.twr$USTAR[midday])
+summary(roughonly)
+#plot(roughonly)
+
+plot(wcr.td[midday]~wcr.twr$WS[midday])
+windonly<-lm(wcr.td[midday]~wcr.twr$WS[midday])
+summary(windonly)
+
+#Combined
+combo1<-lm(wcr.td[midday]~saps[midday]+wcr.twr$NETRAD[midday])
+summary(combo1)
+
+combo2<-lm(wcr.td[midday]~wcr.twr$NETRAD[midday]+saps[midday])
+summary(combo2)
+
+#What about LE, VPD?
+plot(wcr.td[midday]~wcr.twr$LE[midday])
+leonly<-lm(wcr.td[midday]~wcr.twr$LE[midday])
+summary(leonly)
+
+plot(wcr.td[midday]~wcr.twr$VPD_PI_1[midday])
+vpdonly<-lm(wcr.td[midday]~wcr.twr$VPD_PI_1[midday])
+summary(vpdonly)
+
+
+
+#fuckit,differences.
+
+difftwr<-wcr.twr-syv.twr
+diffsap<-rowSums(wcr.mega)-rowSums(syv.mega)
+td<-wcr.master$TD-syv.master$TD
+tsd<-wcr.temp-syv.temp
+
+
+eb.interest<-c(10:11,15:16,18:20,24:25,27:30)
+
+
+cortab.gsd<-cor(cbind(difftwr[daygs,eb.interest],diffsap[daygs],td[daygs], tsd[daygs]), use="pairwise.complete.obs")
+corrplot(cortab.gsd)
+#TD not really correlated to anything but TS
+
+
+
+summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
+
+summary(lm(wcr.master$TS[daygs]~wcr.twr$NETRAD_1[daygs]+wcr.twr$H_1[daygs]+wcr.twr$LE_1[daygs]+wcr.twr$TA_1[daygs]))
+summary(lm(syv.master$TS[daygs]~syv.twr$NETRAD_1[daygs]+syv.twr$H_1[daygs]+syv.twr$LE_1[daygs]+syv.twr$TA_1[daygs]))
+
+summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$TA_1[daygs]))
+summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]+difftwr$TA_1[daygs]))
+#strong effect of TA on TS; explains another 40%+ of variability
+
+summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
+summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]))
+#TS 14-20% ecosystem determined
+
+summary(lm(td[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$TA_1[daygs]))
+summary(lm(td[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]+difftwr$TA_1[daygs]))
+
+summary(lm(td[daygs]~tsd[daygs]))#39% explined by surface diffs
+summary(lm(td[daygs]~difftwr$TA_1[daygs]))#basically not at all explained by atm temp diffs
+
+summary(lm(difftwr$TA_1[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
+summary(lm(difftwr$TA_1[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]))
+#TA not ecosystem determined largely; only 14% variability explained
+
+bigmodel<-lm(td[daygs]~difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$NETRAD[daygs]+difftwr$WS[daygs]+difftwr$USTAR_1[daygs]+diffsap[daygs])
+summary(bigmodel)
+#Sap significant, but still only explains a tiny fraction of variation
+
+#Does aggregating by day affect anything?
+daydiff<-aggregate(difftwr[dayind,], by=list(wcr.twr$DOY[dayind]), FUN='mean', na.rm=TRUE)
+daysap<-aggregate(diffsap[dayind], by=list(wcr.twr$DOY[dayind]), FUN='sum' )$x
+daytd<-aggregate(td[dayind], by=list(wcr.twr$DOY[dayind]), FUN='mean' )$x
+dayts<-aggregate(tsd[dayind], by=list(wcr.twr$DOY[dayind]), FUN='mean' )$x
+
+daydf<-cbind(daydiff, daysap, daytd, dayts)
+daycor<-cor(daydf[gs,c((eb.interest+1),37:39)], use="pairwise.complete.obs")
+corrplot(daycor)
