@@ -128,6 +128,22 @@ for(p in 1:length(unique(wcr.tree$SPP))){
 wcr.site<-sweep(wcr.gap, 2,((wcr.tree$SWA_calc/10000)*wcr.tree$MULT_calc), FUN='*')*1800/1000
 syv.site<-sweep(syv.gap, 2,((syv.tree$SWA_calc/10000)*syv.tree$MULT_calc), FUN='*')*1800/1000
 
+#
+wcr.flow.gs<-wcr.site[wcr.ts$DOY%in%gs,]
+wcr.flow.day<-aggregate(wcr.flow.gs,by=list(ts.gs$DOY), FUN='mean')
+
+syv.flow.gs<-syv.site[syv.ts$DOY%in%gs,]
+syv.flow.day<-aggregate(syv.flow.gs,by=list(ts.gs$DOY), FUN='mean')
+
+wcr.flow.tr<-colMeans(wcr.flow.day)[2:15]
+syv.flow.tr<-colMeans(syv.flow.day, na.rm=TRUE)[2:21]
+
+wcr.tree$flow<-wcr.flow.tr
+syv.tree$flow<-syv.flow.tr
+
+boxplot(wcr.tree$flow~wcr.tree$SPP)
+boxplot(syv.tree$flow~syv.tree$SPP)
+
 #temporary
 plot(aggregate(syv.site[,1], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
 for(i in 1:ncol(syv.site)){
