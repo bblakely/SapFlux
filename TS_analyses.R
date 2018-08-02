@@ -569,7 +569,7 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
 plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[gsind,],dat2=syv.twr[gsind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
-plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
+plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', 'SW_OUT', "USTAR_1","LW_OUT"), allhr=FALSE)
 
 
 wcr.master$TS<-wcr.temp; colnames(wcr.master)[3]<-'DTIME'; wcr.master$TD<-wcr.td
@@ -590,67 +590,25 @@ plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "L
 #Some linear modeling?
 
 
-saps<-rowSums(wcr.mega)
-flux<-rowMeans(wcr.gap)
-vpd<-wcr.twr$VPD_PI_1
-vpd[which(vpd==Inf)]<-NA
-
 #what am I doing I need to focus on temp..
 
 midday<-which(wcr.ts$HOUR==14& wcr.ts$MIN== 0 & wcr.ts$DOY%in%gs) #2:00 every day; peakish
-
-plot(wcr.td[midday]~saps[midday])
-saponly<-lm(wcr.td[midday]~saps[midday])
-summary(saponly)
-#plot(saponly)
-
-plot(wcr.td[midday]~wcr.twr$NETRAD[midday])
-radonly<-lm(wcr.td[midday]~wcr.twr$NETRAD[midday])
-summary(radonly)
-#plot(radonly)
-
-plot(wcr.td[midday]~wcr.twr$USTAR[midday])
-roughonly<-lm(wcr.td[midday]~wcr.twr$USTAR[midday])
-summary(roughonly)
-#plot(roughonly)
-
-plot(wcr.td[midday]~wcr.twr$WS[midday])
-windonly<-lm(wcr.td[midday]~wcr.twr$WS[midday])
-summary(windonly)
-
-#Combined
-combo1<-lm(wcr.td[midday]~saps[midday]+wcr.twr$NETRAD[midday])
-summary(combo1)
-
-combo2<-lm(wcr.td[midday]~wcr.twr$NETRAD[midday]+saps[midday])
-summary(combo2)
-
-#What about LE, VPD?
-plot(wcr.td[midday]~wcr.twr$LE[midday])
-leonly<-lm(wcr.td[midday]~wcr.twr$LE[midday])
-summary(leonly)
-
-plot(wcr.td[midday]~wcr.twr$VPD_PI_1[midday])
-vpdonly<-lm(wcr.td[midday]~wcr.twr$VPD_PI_1[midday])
-summary(vpdonly)
-
-
 
 #fuckit,differences.
 
 difftwr<-wcr.twr-syv.twr
 diffsap<-rowSums(wcr.mega)-rowSums(syv.mega)
-td<-wcr.master$TD-syv.master$TD
+td<-wcr.master$TD-syv.master$TD;td[td>8]<-NA
 tsd<-wcr.temp-syv.temp
 
 
 eb.interest<-c(10:11,15:16,18:20,24:25,27:30)
 
+library(corrplot)
 
 cortab.gsd<-cor(cbind(difftwr[daygs,eb.interest],diffsap[daygs],td[daygs], tsd[daygs]), use="pairwise.complete.obs")
 corrplot(cortab.gsd)
 #TD not really correlated to anything but TS
-
 
 
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
@@ -661,20 +619,19 @@ summary(lm(syv.master$TS[daygs]~syv.twr$NETRAD_1[daygs]+syv.twr$H_1[daygs]+syv.t
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$TA_1[daygs]))
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]+difftwr$TA_1[daygs]))
 #strong effect of TA on TS; explains another 40%+ of variability
+#using sap instead of LE explains an extra 7% of variability; LE actuallty makes things worse by about 0.05r2. Sap vs nothing is an extra 2% (pretty weak)
+
 
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]))
-#TS 14-20% ecosystem determined
+#TS 14-20% ecosystem determined; sap adds an extra 5% explained variance
 
 summary(lm(td[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$TA_1[daygs]))
 summary(lm(td[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]+difftwr$TA_1[daygs]))
+#Sap technically significant, but basically nothing explains TD
 
 summary(lm(td[daygs]~tsd[daygs]))#39% explined by surface diffs
 summary(lm(td[daygs]~difftwr$TA_1[daygs]))#basically not at all explained by atm temp diffs
-
-summary(lm(difftwr$TA_1[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
-summary(lm(difftwr$TA_1[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+diffsap[daygs]))
-#TA not ecosystem determined largely; only 14% variability explained
 
 bigmodel<-lm(td[daygs]~difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$NETRAD[daygs]+difftwr$WS[daygs]+difftwr$USTAR_1[daygs]+diffsap[daygs])
 summary(bigmodel)
@@ -689,3 +646,17 @@ dayts<-aggregate(tsd[dayind], by=list(wcr.twr$DOY[dayind]), FUN='mean' )$x
 daydf<-cbind(daydiff, daysap, daytd, dayts)
 daycor<-cor(daydf[gs,c((eb.interest+1),37:39)], use="pairwise.complete.obs")
 corrplot(daycor)
+
+compday<-cor(daydf[gs,c(11,12,17,21,26,37,38,39)],use="pairwise.complete.obs" )
+
+corrplot(compday,method="shade",diag=FALSE,type='upper', addCoef.col='black',
+         tl.col='black',tl.cex=0.8, mar=c(2,2,3,2))
+
+summary(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
+summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$NETRAD_1))
+summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$daysap+daydf$NETRAD_1))
+summary(lm(daydf$daytd~daydf$daysap)
+
+summary(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysap))
+
+albdiff<-wcr.alb-syv.alb
