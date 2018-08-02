@@ -204,9 +204,15 @@ plotnice(fia.transp.tot/(24*6400*10), breakset.abs/(24*6400*10),title='Modern')
 #Plots now in L/km2h
 
 diff.transp<-cbind(georef,fia.transp$transp-pls.transp$transp)
+diff.transp.pr<-cbind(georef,fia.transp.tot[,3]-pls.transp.tot[,3])
+
+
 
 plotnice(diff.transp/(24*6400*10),breakset.diff/(24*6400*10), colset="RdYlGn", title='Difference (Modern-Historic)')
+plotnice(diff.transp.pr/(24*6400*10),breakset.diff/(24*6400*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 
+colnames(diff.transp.pr)[3]<-"tdiff"
+write.csv(diff.transp.pr, "pls.fia.transp.diff.csv")
 
 sp.plot='no'  #Do you want regressions by species plots?
 
