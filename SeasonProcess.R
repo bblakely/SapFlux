@@ -167,17 +167,19 @@ rm('lai.1','lai.2','lai.3','und.l','wcr.l','syv.l','wcrm.l','lai.wcr','lai.wcrm'
 #LAI plot
 #####
 par(mfrow=c(1,1))
-plot(LAI.dat$SYV~LAI.dat$DOY, type='l', ylim=c(0,7), col='gray2', main='Leaf Area Index', ylab='LAI',xlab='DOY',lwd=2, font=2, font.lab=2)
+plot(LAI.dat$SYV~LAI.dat$DOY, type='l', ylim=c(0.2,6.7), col='gray2', main='Leaf Area Index', ylab='LAI',xlab='DOY',lwd=2, font=2, font.lab=2)
+
 points(LAI.2016$SYV~LAI.2016$DOY, col='gray2', pch=2, lwd=2)
+lines(LAI.dat$WCR~LAI.dat$DOY, col='blue', lwd=2)
+points(LAI.2016$WCR~LAI.2016$DOY, col='blue', pch=1, lwd=2)
 
-lines(LAI.dat$WCR~LAI.dat$DOY, col='gray', lwd=2)
-points(LAI.2016$WCR~LAI.2016$DOY, col='gray', pch=1, lwd=2)
+grid(NULL,col='dark gray')
 
-lines(LAI.dat$WCRM~LAI.dat$DOY, col='gray', lty=2, lwd=2)
-points(LAI.2016$WCRM~LAI.2016$DOY, col='gray', pch=1)
+#lines(LAI.dat$WCRM~LAI.dat$DOY, col='gray', lty=2, lwd=2)
+#points(LAI.2016$WCRM~LAI.2016$DOY, col='gray', pch=1)
 
-lines(LAI.dat$UND~LAI.dat$DOY, col='light blue')
-points(LAI.2016$UND~LAI.2016$DOY, col='light blue', pch=4)
+#lines(LAI.dat$UND~LAI.dat$DOY, col='light blue')
+#points(LAI.2016$UND~LAI.2016$DOY, col='light blue', pch=4)
 
 legend(170,3,legend=c('SYV',"WCR"), #,"WCRM","UND"), 
        col=c("gray2","gray"), #,"orange","light blue"), 

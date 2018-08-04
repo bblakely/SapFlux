@@ -144,6 +144,19 @@ syv.tree$flow<-syv.flow.tr
 boxplot(wcr.tree$flow~wcr.tree$SPP)
 boxplot(syv.tree$flow~syv.tree$SPP)
 
+#Plots with flow scaled
+
+
+wcr.forest.day<-aggregate(wcr.mega[dayind,], by=list(wcr.master$DOY[dayind]), FUN='sum')[,2:305]
+syv.forest.day<-aggregate(syv.mega[dayind,], by=list(syv.master$DOY[dayind]), FUN='sum')[,2:303]
+
+boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,300))
+boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,300))
+
+boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,100))
+boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,100))
+
+
 #temporary
 plot(aggregate(syv.site[,1], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
 for(i in 1:ncol(syv.site)){

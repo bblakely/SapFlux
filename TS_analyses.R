@@ -543,32 +543,38 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
       hrmult<-length(unique(dat1$HOUR))/24
       ndays<-ndays*hrmult}
     
-    sm1<-rollapply(dat1[,varcol1], 48*ndays, FUN='mean', na.rm=TRUE)
-    sm2<-rollapply(dat2[,varcol2], 48*ndays, FUN='mean', na.rm=TRUE)
     
-    date<-rollapply(dat1$DTIME, 48*ndays, FUN='mean', na.rm=TRUE)
+    sm1<-rollapply(dat1[,varcol1], 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
+    sm2<-rollapply(dat2[,varcol2], 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
     
-    #spike1<-which(abs(diff(sm1))>4*sd(diff(sm1), na.rm=TRUE))
-    #spike2<-which(abs(diff(sm2))>4*sd(diff(sm2), na.rm=TRUE))
+    date<-rollapply(dat1$DTIME, 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
     
-    #sm1[spike1]<-NA
-    #sm2[spike2]<-NA
+    sm1[dat1$DTIME>41&dat1$DTIME<55]<-NA #NAN spiky sefction
+    sm2[dat2$DTIME>41&dat2$DTIME<55]<-NA #NAN spiky sefction
+    
     
     ylim=c(min(c(sm1,sm2), na.rm=TRUE), max(c(sm1,sm2), na.rm=TRUE))
     
-    plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab='Wm-2', ylim=ylim)
-    lines(sm2~date, type='l', ylab='Wm-2')
+    plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab='Wm-2', ylim=ylim, lwd=3)
+    lines(sm2~date, type='l', ylab='Wm-2', lwd=2)
     
     legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
-    plot((sm1-sm2)~date, type='l', ylab='Wm-2', main="Difference")
-    abline(h=0, col='red')
     
-  }
+    
+    pos<-which((sm1-sm2)>=0)
+    neg<-which((sm1-sm2)<0)
+
+    plot((sm1-sm2)~date, type='l', ylab='Wm-2', main="Difference", lwd=3, col='white')
+    lines((sm1-sm2)~date,subset=neg, type='l', ylab='Wm-2', main="Difference", lwd=3, col='dark red')
+    lines((sm1-sm2)~date,subset=pos, type='l', ylab='Wm-2', main="Difference", lwd=3, col='forest green')
+    abline(h=0, lwd=4)
+    
+  }#How to make lines not connect across? Google whien able
 }
 
 plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[gsind,],dat2=syv.twr[gsind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
-plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"), allhr=FALSE)
+plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=20,varset=c("H_1", "LE_1","NETRAD_1",'USTAR_1', 'SW_IN', "LW_OUT"), allhr=FALSE)
 plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', 'SW_OUT', "USTAR_1","LW_OUT"), allhr=FALSE)
 
 
@@ -650,7 +656,7 @@ corrplot(daycor)
 compday<-cor(daydf[gs,c(11,12,17,21,26,37,38,39)],use="pairwise.complete.obs" )
 
 corrplot(compday,method="shade",diag=FALSE,type='upper', addCoef.col='black',
-         tl.col='black',tl.cex=0.8, mar=c(2,2,3,2))
+         tl.col='black',tl.cex=0.8, mar=c(2,2,3,2), tl.srt=45)
 
 summary(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
 summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$NETRAD_1))
