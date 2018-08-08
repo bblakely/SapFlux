@@ -1,4 +1,7 @@
+#Calculates radial profiles from calibration experiment 
+#in which a long needle measured sap flux for ~3 days at each of 4 depths.
 
+#Data from calibration 
 syv.c.raw<-read.csv('SYV_Calib.csv')
 und.c.raw<-read.csv('UND_Calib.csv')
 wcr.c.raw<-read.csv('WCR_Calib.csv')
@@ -7,8 +10,9 @@ wcr.c.raw<-read.csv('WCR_Calib.csv')
 wcr.c.raw<-wcr.c.raw[wcr.c.raw$DOY > 208,]
 
 
-sc<-8
+sc<-8 #First column with main data
 
+#Cleanup
 syv.c.dat<-syv.c.raw[,sc:ncol(syv.c.raw)]
 syv.c.dat[syv.c.dat<0.001 | syv.c.dat> 1]<-NaN
 und.c.dat<-und.c.raw[,sc:ncol(und.c.raw)]
@@ -16,6 +20,7 @@ und.c.dat[und.c.dat<0.001 | und.c.dat> 1]<-NaN
 wcr.c.dat<-wcr.c.raw[,sc:ncol(wcr.c.raw)]
 wcr.c.dat[wcr.c.dat<0.001 | wcr.c.dat> 1]<-NaN
 
+#Days when sensor was moved between depths (from field journal)
 und.switchdays<-c(211,215,220,223,226)
 wcr.switchdays<-c(209,213,217,221,224)
 syv.switchdays<-c(210,214,218,222,226)
@@ -29,17 +34,15 @@ und.c.dat[und.c.raw$DOY %in% und.switchdays,]<-NaN
 wcr.c.dat[wcr.c.raw$DOY %in% wcr.switchdays,]<-NaN
 #& wcr.c.raw$H > 6 &wcr.c.raw$H< 22,] <- NaN
 
-
+#First look plots
 for(i in 1:4){
-  plot( syv.c.raw$DecDOY,syv.c.dat[,i], main=paste('syv', i), type='l', ylab='Percent max sap flow')
+  plot( syv.c.raw$DecDOY,syv.c.dat[,i], main=paste('syv', i), type='l')
 }
-
 for(i in 1:5){
-  plot(und.c.raw$DecDOY, und.c.dat[,i],  main=paste('und', i), type='l','Percent max sap flow')
+  plot(und.c.raw$DecDOY, und.c.dat[,i],  main=paste('und', i), type='l')
 }
-
 for(i in 1:2){
-  plot(wcr.c.raw$DecDOY, wcr.c.dat[,i], main=paste('wcr', i), type='l','Percent max sap flow')
+  plot(wcr.c.raw$DecDOY, wcr.c.dat[,i], main=paste('wcr', i), type='l')
 }
 
 
@@ -47,24 +50,27 @@ sites<-list(wcr.c.dat,syv.c.dat,und.c.dat)
 meta.raw<-list(wcr.c.raw,syv.c.raw,und.c.raw)
 names<-c('wcr','syv','und')
 
+#Loop for all 3 sites. Probably would have been more efficient as a function but it works
 for (s in 1:3){
-  DAT<-sites[[s]]
-  meta<-meta.raw[[s]]
+  DAT<-sites[[s]]      #Grab data for a site
+  meta<-meta.raw[[s]]  #Grab metadata for same site
   
-  DAT.t<-cbind(meta$DOY, DAT)
+  DAT.t<-cbind(meta$DOY, DAT) #Timeseries + raw data. Same for all sites
   colnames(DAT.t)<-c('DOY', colnames(DAT))
   
+  #Set reusable params. Seriously this should have been a function.
   nObs<-nrow(DAT)
   DOYs<-unique(meta$DOY)
   nDays<-length(DOYs)
   nSensors<-ncol(DAT)
   Sensornames<-colnames(DAT)
   
-  #Convert to flow
+  #Convert to flow. Throws errors because of days with all NaNs. Don't worry about it.
   maxes<-aggregate(DAT.t, by=list(DAT.t$DOY), FUN=max, na.rm=TRUE)
   maxes<-maxes[,3:ncol(maxes)]
   maxes[maxes==-Inf]<-NaN
   
+  #Make repeating timeseries of maxes for sapflux calculation.
   Daymaxes<-as.data.frame(matrix(data=NaN,nrow=nObs, ncol=nSensors))
   Daymax.names<-rep(NaN, nSensors)
   for (v in 1:nSensors){
@@ -80,7 +86,6 @@ for (s in 1:3){
   rm(Daymax.names, Daymaxvec)
   
 # To flow
-
 K<-as.data.frame(matrix(data=NaN,nrow=nObs, ncol=nSensors))
 K.names<-rep(NaN, nSensors)
 Flux<-as.data.frame(matrix(data=NaN,nrow=nObs, ncol=nSensors))
@@ -98,21 +103,20 @@ colnames(Flux)<-Flux.names
 
 rm(K.names, K)
 
-if(s==1){wcr.flux<-Flux}
+#Rename to save results
+if(s==1){wcr.flux<-Flux} 
 if(s==2){syv.flux<-Flux}
 if(s==3){und.flux<-Flux}
   
 }
 
-
+#Plot flow. Nice decreasing pattern on most. Some SYV sensors break.
 for(i in 1:4){
   plot( syv.c.raw$DecDOY,syv.flux[,i], main=paste('syv flux', i), type='l')
 }
-
 for(i in 1:5){
   plot(und.c.raw$DecDOY, und.flux[,i],  main=paste('und flux', i), type='l')
 }
-
 for(i in 1:2){
   plot(wcr.c.raw$DecDOY, wcr.flux[,i], main=paste('wcr flux', i), type='l')
 }
@@ -121,7 +125,8 @@ rm('Flux','meta','Daymaxes')
 
 #Ratios
 
-#Prep for aggregation
+#Prep for aggregation. Another thing that should be a function. 
+#Geez 2016 me, get yourself together!
 und.dectime<-(und.c.raw$H)+((und.c.raw$M)/60)
 und.flux.t<-cbind(und.c.raw$DOY, und.dectime, und.flux)
 colnames(und.flux.t)<-c('DOY','DecTime', colnames(und.flux))
@@ -140,9 +145,9 @@ colnames(wcr.flux.t)<-c('DOY','DecTime', colnames(wcr.flux))
 syv.flux.t[syv.flux.t$DOY == 217 & syv.flux.t$DecTime >10 & syv.flux.t$DecTime<16,3:6]<-NaN
 und.flux.t[und.flux.t$DOY == 217 & und.flux.t$DecTime >10 & und.flux.t$DecTime<16,3:7]<-NaN
 
-#Position 1
-und.d1<-und.flux.t[und.flux.t$DOY %in% c(212:214),]
-und.p1<-aggregate(und.d1, by=list(und.d1$DecTime), FUN=mean, na.rm=TRUE)
+#Position 1 (Normal 10mm depth, middle of 0 - 20 mm ring). Days from field journal.
+und.d1<-und.flux.t[und.flux.t$DOY %in% c(212:214),]  #Pull days of interest
+und.p1<-aggregate(und.d1, by=list(und.d1$DecTime), FUN=mean, na.rm=TRUE) #average 5-min rates across the ~3 days to make an avg daily profile
 
 syv.d1<-syv.flux.t[syv.flux.t$DOY %in% c(211:213),]
 syv.p1<-aggregate(syv.d1, by=list(syv.d1$DecTime), FUN=mean, na.rm=TRUE)
@@ -152,7 +157,7 @@ wcr.p1<-aggregate(wcr.d1, by=list(wcr.d1$DecTime), FUN=mean, na.rm=TRUE)
 
 rm('und.d1','syv.d1','wcr.d1')
 
-#Position 2
+#Position 2 (30 mm depth; middle of 20 - 40mm ring)
 und.d2<-und.flux.t[und.flux.t$DOY %in% c(216:219),]
 und.p2<-aggregate(und.d2, by=list(und.d2$DecTime), FUN=mean, na.rm=TRUE)
 
@@ -164,7 +169,7 @@ wcr.p2<-aggregate(wcr.d2, by=list(wcr.d2$DecTime), FUN=mean, na.rm=TRUE)
 
 rm('und.d2','syv.d2','wcr.d2')
 
-#Position 3
+#Position 3 (50mm depth, 40 - 60mm ring)
 und.d3<-und.flux.t[und.flux.t$DOY %in% c(221:222),]
 und.p3<-aggregate(und.d3, by=list(und.d3$DecTime), FUN=mean, na.rm=TRUE)
 
@@ -176,7 +181,7 @@ wcr.p3<-aggregate(wcr.d3, by=list(wcr.d3$DecTime), FUN=mean, na.rm=TRUE)
 
 rm('und.d3','syv.d3','wcr.d3')
 
-#Position 4
+#Position 4 (70mm depth, 60 - 80mm ring)
 und.d4<-und.flux.t[und.flux.t$DOY %in% c(224:225),]
 und.p4<-aggregate(und.d4, by=list(und.d4$DecTime), FUN=mean, na.rm=TRUE)
 
@@ -221,11 +226,11 @@ par(mfrow=c(1,2))
 
 #UNDERC
 datlist.und<-list()
-profs.und<-matrix(data=NA, nrow=5, ncol=4)
-for (r in 1:length(und.c)){
-  dat<-und.c[[r]]
-  dat.r<-dat/dat[,1]
-  dat.r.sub<-dat.r[145:192,1:4]
+profs.und<-matrix(data=NA, nrow=5, ncol=4) #space
+for (r in 1:length(und.c)){  #each member of und.c is data from one of the UND sensors. Thus this loops over 5 sensors
+  dat<-und.c[[r]]     #Pull sensor. Will be 288 rows b/c there are 288 5 min periods in a day
+  dat.r<-dat/dat[,1]  #Flux relative to the normal 10mm position (theoretically highest flux rate); will normally be less than 1
+  dat.r.sub<-dat.r[145:192,1:4] #Subset to midday 12 - 4 
   datlist.und[[r]]<-dat.r.sub
   profs.und[r,]<-colMeans(dat.r.sub)
   plot(colMeans(dat.r.sub), main=paste('UND C',r, sep=''))
@@ -255,8 +260,8 @@ for (r in 1:length(syv.c)){
   dat.r.sub<-dat.r[145:192,1:4]
   datlist.syv[[r]]<-dat.r.sub
   profs.syv[r,]<-colMeans(dat.r.sub)
-  if(r==4){dat.r.sub[,4]<-NA}
-  if(r==1 | r==4){
+  if(r==4){dat.r.sub[,4]<-NA}  #take out 4th measurement time for sensor 4 (sensor broke between depth 3 and 4)
+  if(r==1 | r==4){  #Don't use 2 or 3; these sensors had strange behavior from day 1
     plot(colMeans(dat.r.sub), main=paste('SYV C',r, sep=''))
     lines(colMeans(dat.r.sub))}
 }
@@ -266,10 +271,10 @@ rm('dat.r','dat.r.sub','dat')
 #Aggregate profiles
 
 syv.c.names<-c('S1', 'S2','S3','S4')
-syv.c.valid<-c(2,3,1,3)
+syv.c.valid<-c(2,3,1,3)  #Best guess: set by allometric sapwood depth of each tree, e.g. C1 must have predicted SWD either <50mm or <70mm
 syv.agg<-(cbind(syv.c.names, profs.syv, syv.c.valid))
-syv.agg[2:3,2:5]<-NaN
-syv.agg[4,5]<-NaN
+syv.agg[2:3,2:5]<-NaN #NAN broken sensors 2 & 3
+syv.agg[4,5]<-NaN # NAN broken 4th band of sensor 4
 
 und.c.names<-c('U1', 'U2','U3','U4','U5')
 und.c.valid<-c(2,4,2,1,3)
@@ -279,7 +284,7 @@ wcr.c.names<-c('W1','W2')
 wcr.c.valid<-c(1,2)
 wcr.agg<-cbind(wcr.c.names, profs.wcr, wcr.c.valid)
 
-
+#All profiles in one place
 profile<-as.data.frame(rbind(wcr.agg,und.agg,syv.agg))
 colnames(profile)<-c('site','P1','P2','P3','P4','valid')
 
@@ -293,11 +298,14 @@ profile$P4<-as.numeric(levels(profile$P4)[profile$P4])
 profile$valid<-as.numeric(levels(profile$valid)[profile$valid])
 
 #Adjusted based on manual inspection of curves
-adj.valid<-c(2,3,3,3,2,2,3,2,4,4,3)
+adj.valid<-c(2,3,3,3,2,2,3,2,4,4,3) 
+#Extended to points in the curve where it appeas sapwood continues 
+#(i.e. there is substantial flux) even though allometry predicts thinner sapwood
 profile$adj<-adj.valid
 
 profile.val<-profile
 
+#NANs unlikely profile values
 for (r in 1:nrow(profile.val)){
   if(profile.val[r,7]<4){
   profile.val[r,((profile.val[r,7]+2):5)]<-NaN
@@ -322,23 +330,18 @@ lines(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE))
 
 
 #by species
-plot(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE), main='TIAM', ylim=c(0.2,1), ylab='% max sapflux', xlab='Sapwood Depth (cm)')
-lines(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE), lwd=3)
-box(lwd=3)
+plot(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE), main='TIAM', ylim=c(0,1))
+lines(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE))
 
-plot(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE), main='POTR', ylim=c(0.2,1), ylab='% max sapflux', xlab='Sapwood Depth (cm)')
-lines(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE), lwd=3)
-box(lwd=3)
+plot(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE), main='POTR', ylim=c(0,1))
+lines(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE))
 
-plot(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE), main='Acer spp.', ylim=c(0.2,1), ylab='% max sapflux', xlab='Sapwood Depth (cm)')
-lines(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE), lwd=3)
-box(lwd=3)
+plot(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE), main='Acer spp.', ylim=c(0,1))
+lines(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE))
 
-plot(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE), main='TSCA', ylab='% max sapflux', xlab='Sapwood Depth (cm)')
-lines(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE), lwd=3)
-box(lwd=3)
+plot(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE), main='TSCA', ylim=c(0,1))
+lines(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE))
 
-plot(colMeans(profile.val[1, 2:5], na.rm=TRUE), main='OSVI', ylab='% max sapflux', xlab='Sapwood Depth (cm)')
-lines(colMeans(profile.val[1, 2:5], na.rm=TRUE), lwd=3)
-box(lwd=3)
+plot(colMeans(profile.val[1, 2:5], na.rm=TRUE), main='OSVI', ylim=c(0,1))
+lines(colMeans(profile.val[1, 2:5], na.rm=TRUE))
 
