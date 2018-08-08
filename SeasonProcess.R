@@ -576,9 +576,15 @@ diffs.gf[246:253]<-seq(from=diffs[245], to=diffs[253], length.out=253-245)
 diffs.gf[155:178]<-seq(from=diffs[155], to=diffs[178], length.out=178-154)
 
 par(mfrow=c(1,1))
-plot(diffs.gf, type='l', col='red', main='WCR-SYV', ylab='Transp. difference (L day-1)')
-lines(diffs, lwd=2)
-abline(h=0)
+plot(diffs.gf, type='l', main='WCR-SYV', ylab='Transp. difference (L day-1)', lwd=3, lty=2, font=2, font.lab=2, xlab='Day of Year', col='white')
+lines(diffs.gf, col='dark red', lwd=2,lty=2);lines(diffs, lwd=3, col='dark red')
+clip(0, length(diffs.gf),0, max(diffs.gf, na.rm=TRUE))
+lines(diffs.gf, col='forest green', lwd=2,lty=2);lines(diffs, lwd=3, col='forest green')
+abline(h=0, lwd=2)
+
+syv.sm[156:176]<-NA
+plot(wcr.sm, col='blue', type='l', lwd=3, ylab='Transpiration (L Day-1)', xlab='Day of Year')
+lines(syv.sm, type='l',lwd=3)
 
 
 #####

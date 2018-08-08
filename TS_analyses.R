@@ -555,21 +555,21 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
     
     ylim=c(min(c(sm1,sm2), na.rm=TRUE), max(c(sm1,sm2), na.rm=TRUE))
     
-    plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab='Wm-2', ylim=ylim, lwd=3)
-    lines(sm2~date, type='l', ylab='Wm-2', lwd=2)
+    if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression(paste(degree,'C'))}else{ylab<-'Wm-2'}
+    
+    plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
+    lines(sm2~date, type='l',lwd=2)
     
     legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
     
     
-    pos<-which((sm1-sm2)>=0)
-    neg<-which((sm1-sm2)<0)
-
-    plot((sm1-sm2)~date, type='l', ylab='Wm-2', main="Difference", lwd=3, col='white')
-    lines((sm1-sm2)~date,subset=neg, type='l', ylab='Wm-2', main="Difference", lwd=3, col='dark red')
-    lines((sm1-sm2)~date,subset=pos, type='l', ylab='Wm-2', main="Difference", lwd=3, col='forest green')
+    plot((sm1-sm2)~date, type='l', ylab=ylab,xlab='Day of Year', main="Difference", lwd=3, col='white', font=2,font.lab=2)
+    lines((sm1-sm2)~date, type='l', main="Difference", lwd=3, col='dark red')
+    clip(min(date), max(date),0, max(sm1-sm2,na.rm=TRUE))
+    lines((sm1-sm2)~date, type='l', main="Difference", lwd=3, col='forest green')
     abline(h=0, lwd=4)
     
-  }#How to make lines not connect across? Google whien able
+  }
 }
 
 plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
@@ -606,6 +606,16 @@ difftwr<-wcr.twr-syv.twr
 diffsap<-rowSums(wcr.mega)-rowSums(syv.mega)
 td<-wcr.master$TD-syv.master$TD;td[td>8]<-NA
 tsd<-wcr.temp-syv.temp
+
+wcr.master$sap<-rowSums(wcr.mega);syv.master$sap<-rowSums(syv.mega)
+
+plot(wcr.sm.tot[gs], col='white', ylim=c(0,6000), xlim=c(min(gs),max(gs)), ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs]+wcr.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='dark graY')
+polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs]+syv.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='black')
+
+polygon(x=c(156,156,177,177),y=c(0,3000,3000,0), col='dark gray', border=NA)
+polygon(x=c(170,170,177,177),y=c(3000,4500,4500,3000), col='dark gray', border=NA)
+
 
 
 eb.interest<-c(10:11,15:16,18:20,24:25,27:30)
@@ -654,9 +664,14 @@ daycor<-cor(daydf[gs,c((eb.interest+1),37:39)], use="pairwise.complete.obs")
 corrplot(daycor)
 
 compday<-cor(daydf[gs,c(11,12,17,21,26,37,38,39)],use="pairwise.complete.obs" )
+rownames(compday)<-c('H','LE','U*','SoilMoist','NetRad','T','TD','TS')
+colnames(compday)<-c('H','LE','U*','SoilMoist','NetRad','T','TD','TS')
 
-corrplot(compday,method="shade",diag=FALSE,type='upper', addCoef.col='black',
-         tl.col='black',tl.cex=0.8, mar=c(2,2,3,2), tl.srt=45)
+
+corrplot(compday,method="shade",diag=FALSE,type='upper', addCoef.col='black',number.cex=0.7,
+         tl.col='black',tl.cex=1, mar=c(1,1,1,1), tl.srt=45, font=2, outline=TRUE, addgrid.col='black')
+
+
 
 summary(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
 summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$NETRAD_1))
@@ -665,4 +680,26 @@ summary(lm(daydf$daytd~daydf$daysap)
 
 summary(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysap))
 
-albdiff<-wcr.alb-syv.alb
+AIC(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
+AIC(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$NETRAD_1))
+AIC(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$daysap+daydf$NETRAD_1))
+AIC(lm(daydf$daytd~daydf$daysap))
+        
+AIC(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysap))
+        
+
+albdiff<-wcr.alb-syv.alb;albdiff[abs(albdiff)>1]<-NA
+
+albdiff.doy<-aggregate(albdiff, by=list(wcr.master$DOY), FUN='mean', na.rm=TRUE)$x
+albdiff.sm<-rollapply(albdiff.doy, width=7,FUN='mean')
+
+plot(albdiff.sm, type='l', lwd=3, ylim=c(-0.05,0.15), col='forest green', 
+     font=2, font.lab=2, ylab='Albedo change (unitless)', xlab='Day of Year')
+abline(h=0)
+
+
+wcr.forest.wood<-aggregate(wcr.forest$SWA, by=list(wcr.forest$species), FUN='sum')
+syv.forest.wood<-aggregate(syv.forest$SWA, by=list(syv.forest$species), FUN='sum')
+
+dacsa<-wcr.forest.wood[1,2]-syv.forest.wood[1,2]
+
