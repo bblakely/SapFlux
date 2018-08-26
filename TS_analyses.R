@@ -2,21 +2,10 @@
 library(Hmisc) #sometimes you must run this manually (???)
 library(zoo)
 
-source('Calc_Sapflow_Full.R')
-source('Refine_TowerData.R')
+source('Calc_Sapflow_Full.R', verbose=FALSE) #Also runs prepare data
+source('Refine_TowerData.R', verbose=FALSE)
 
-#Will hang for a bit after 'ST data ready' Tower data takes a while
-
-# 
-# syv.sap.all.1<-syv.sap.all
-# wcr.sap.all.1<-wcr.sap.all
-# 
-# syv.sap.all[syv.sap.all==0]<-NA
-# wcr.sap.all[wcr.sap.all==0]<-NA
-# 
-# wcr.td[wcr.td>8]<-NA
-# syv.td[syv.td>8]<-NA
-
+diagplot<-FALSE #supresses (time consuming) smoothed plots when FALSE
 
 #####ANALYSES#####
 
@@ -242,6 +231,7 @@ text(4,0.75, "syv more cooling"); text(9,-0.5, "wcr more cooling")
 # test<-lm(syv.t~syv.sun+syv.sap)
 # summary(test)
 #####
+
 ####SAPFLUX TRENDS####
 #Site level sums of transp
 syv.sap.all<-rowSums(syv.mega, na.rm=TRUE)
@@ -311,7 +301,7 @@ text(c(-0.2,-0.2,0.28,0.28),c(50000,-20000,50000,-20000), c("wcr cooler+more tra
 #Check out how this corresponds to leaf area.
 
 
-######Does sap lag T or vice-versa?#####
+####Does sap lag T or vice-versa?#####
 lagplot<-function(temptype='raw',sign,index){
   #lag<-abs(i)-1
   #if (sign=="negative"){lag<-(-lag)}
@@ -341,7 +331,6 @@ lagplot("diff","negative",daygs)
 #Best matches with sap lagged 30 min -hours, i.e. temps are driving sapflux
 #Indicate a feedback?
 
-#####
 ####Bowen Ratio####
 syv.bowen<-syv.twr$H_1/syv.twr$LE_1 ; syv.bowen[syv.bowen>20 | syv.bowen<(-2)]<-NA
 wcr.bowen<-wcr.twr$H_1/wcr.twr$LE_1;  wcr.bowen[wcr.bowen>20 | wcr.bowen<(-2)]<-NA
@@ -372,8 +361,6 @@ smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.twr$LE_1[daygs], ylim=c(0,25), xlim=c(
 smoothScatter(wcr.twr$VPD_PI_1[daygs]~wcr.twr$LE_1[daygs], ylim=c(0,25), xlim=c(0,450))
 par(mfrow=c(1,2))
 
-
-#####
 ####T:ET####
 LE.sap.syv<-(syv.sap.all*2260*1000*1.37)/(6400*1800) #2260: spec. heat water KJ/kg (1kg = 1L); 1000: KJ to Joules; 1.37: surveyed area to total area. 6400: plot (80*80) to m2;  1800: 3o min to s
 plot(syv.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='SYV'); lines(LE.sap.syv)
@@ -390,7 +377,6 @@ mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 39% in gs
 #Definitely use these
 #Combined with vpd, this might mean eco controls LE more tightly at WCR
 
-#####
 ####Explore radiation differences####
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
 par(mfrow=c(1,3))
@@ -454,7 +440,6 @@ abline(h=0)
 #This will be useful for showing mesophication, if that's the way I go
 #It supplements sap flux in summer, agreeng with decreased temps
 #But it counters higher temps in winter.
-#####
 
 ####EB balancing####
 plot(wcr.twr$NETRAD_1~wcr.twr$DOY, type='l', main='wcr')
@@ -466,7 +451,7 @@ plot(syv.twr$NETRAD_1~syv.twr$DOY, type='l', main='syv')
 lines(syv.twr$H_1+syv.twr$LE_1~syv.twr$DOY, col='red')
 lines(syv.twr$LE_1~syv.twr$DOY, col='blue')
 #lines(syv.twr$H_1~syv.twr$DOY, col='red')
-#Try getting these into bars
+#Try getting these into bars or polygons
 
 wcr.hlenorm<-(wcr.twr$H_1+wcr.le)/wcr.twr$NETRAD_1
 wcr.hnorm<-wcr.twr$H_1/wcr.twr$NETRAD_1
@@ -508,12 +493,15 @@ mean(syv.twr$H_1[allpos]/(syv.twr.clip$H_1+syv.twr.clip$LE_1)[allpos], na.rm=TRU
 #Check SW vs PPFD and EB balance
 plot(syv.twr$SW_IN~syv.twr$PPFD_IN_PI_F_1, pch=18,cex=0.5)
 syv.cal<-lm(syv.twr$SW_IN~syv.twr$PPFD_IN_PI_F_1)
+
+plot(wcr.twr$SW_IN~wcr.twr$PPFD_IN_PI_F_1, pch=18,cex=0.5)
+wcr.cal<-lm(wcr.twr$SW_IN~wcr.twr$PPFD_IN_PI_F_1)
+
 summary(syv.cal)
 abline(coef(syv.cal), col='red')
 abline(coef(wcr.cal), col='blue')
 
-plot(wcr.twr$SW_IN~wcr.twr$PPFD_IN_PI_F_1, pch=18,cex=0.5)
-wcr.cal<-lm(wcr.twr$SW_IN~wcr.twr$PPFD_IN_PI_F_1)
+
 summary(wcr.cal)
 abline(coef(wcr.cal), col='red')
 abline(coef(syv.cal, col='blue'))
@@ -527,12 +515,11 @@ plot(syv.twr$SW_IN~(wcr.twr$SW_IN));abline(0,1, col='red')
 abline(lm(wcr.twr$SW_IN~0+syv.twr$SW_IN))
 
 
-
 ####Smoothed plots####
 
-plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
+plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot='ALL', set.par=TRUE){
   
-  par(mfrow=c(1,2))
+  if(set.par=="TRUE"){par(mfrow=c(1,2))}
   
   for(v in 1:length(varset)){
     
@@ -557,50 +544,56 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE){
     
     if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression(paste(degree,'C'))}else{ylab<-'Wm-2'}
     
+    if(allplot=="ALL"|allplot=="ABS"){
     plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
     lines(sm2~date, type='l',lwd=2)
     
     legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
+    }
     
-    
+    if(allplot=="ALL"|allplot=="DIF"){
     plot((sm1-sm2)~date, type='l', ylab=ylab,xlab='Day of Year', main="Difference", lwd=3, col='white', font=2,font.lab=2)
     lines((sm1-sm2)~date, type='l', main="Difference", lwd=3, col='dark red')
     clip(min(date), max(date),0, max(sm1-sm2,na.rm=TRUE))
     lines((sm1-sm2)~date, type='l', main="Difference", lwd=3, col='forest green')
     abline(h=0, lwd=4)
+    }
     
   }
 }
 
+if(diagplot==TRUE){
 plotsmooth(dat1=wcr.twr,dat2=syv.twr, ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
 plotsmooth(dat1=wcr.twr[gsind,],dat2=syv.twr[gsind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
-plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=20,varset=c("H_1", "LE_1","NETRAD_1",'USTAR_1', 'SW_IN', "LW_OUT"), allhr=FALSE)
+plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1",'USTAR_1', 'SW_IN', "LW_OUT"), allhr=FALSE)
 plotsmooth(dat1=wcr.twr[dayind,],dat2=syv.twr[dayind,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', 'SW_OUT', "USTAR_1","LW_OUT"), allhr=FALSE)
+}
 
 
 wcr.master$TS<-wcr.temp; colnames(wcr.master)[3]<-'DTIME'; wcr.master$TD<-wcr.td
 syv.master$TS<-syv.temp; colnames(syv.master)[3]<-'DTIME'; syv.master$TD<-syv.td
 
+if(diagplot==TRUE){
 plotsmooth(dat1=wcr.master,dat2=syv.master, ndays=7,varset=c("TA_1", "TS", "TD", "H_1","NETRAD_1"))
 plotsmooth(dat1=wcr.master[gsind,],dat2=syv.master[gsind,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
 plotsmooth(dat1=wcr.master[daygs,],dat2=syv.master[daygs,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
 plotsmooth(dat1=wcr.master[dayind,],dat2=syv.master[dayind,], ndays=7,varset=c("TA_1", "TS", "TD", "NETRAD_1"))
+}
 
 allneg<-which(wcr.twr$H_1<0 | syv.twr$H_1<0 | wcr.twr$LE_1<0 | syv.twr$LE_1<0)
 wcr.sub<-wcr.twr
 wcr.sub[allneg,]<-NA
 syv.sub<-syv.twr
 syv.sub[allneg,]<-NA
+
+if(diagplot==TRUE){
 plotsmooth(dat1=wcr.sub[daygs,],dat2=syv.sub[daygs,], ndays=7,varset=c("H_1", "LE_1","NETRAD_1", 'SW_IN', "LW_OUT"))
+}
+#####
 
-#Some linear modeling?
-
-
-#what am I doing I need to focus on temp..
+####Linear modeling prep####
 
 midday<-which(wcr.ts$HOUR==14& wcr.ts$MIN== 0 & wcr.ts$DOY%in%gs) #2:00 every day; peakish
-
-#fuckit,differences.
 
 difftwr<-wcr.twr-syv.twr
 diffsap<-rowSums(wcr.mega)-rowSums(syv.mega)
@@ -608,15 +601,6 @@ td<-wcr.master$TD-syv.master$TD;td[td>8]<-NA
 tsd<-wcr.temp-syv.temp
 
 wcr.master$sap<-rowSums(wcr.mega);syv.master$sap<-rowSums(syv.mega)
-
-plot(wcr.sm.tot[gs], col='white', ylim=c(0,6000), xlim=c(min(gs),max(gs)), ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
-polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs]+wcr.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='dark graY')
-polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs]+syv.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='black')
-
-polygon(x=c(156,156,177,177),y=c(0,3000,3000,0), col='dark gray', border=NA)
-polygon(x=c(170,170,177,177),y=c(3000,4500,4500,3000), col='dark gray', border=NA)
-
-
 
 eb.interest<-c(10:11,15:16,18:20,24:25,27:30)
 
@@ -626,7 +610,7 @@ cortab.gsd<-cor(cbind(difftwr[daygs,eb.interest],diffsap[daygs],td[daygs], tsd[d
 corrplot(cortab.gsd)
 #TD not really correlated to anything but TS
 
-
+####Linear modeling by daygs####
 summary(lm(tsd[daygs]~difftwr$NETRAD_1[daygs]+difftwr$H_1[daygs]+difftwr$LE_1[daygs]))
 
 summary(lm(wcr.master$TS[daygs]~wcr.twr$NETRAD_1[daygs]+wcr.twr$H_1[daygs]+wcr.twr$LE_1[daygs]+wcr.twr$TA_1[daygs]))
@@ -652,8 +636,9 @@ summary(lm(td[daygs]~difftwr$TA_1[daygs]))#basically not at all explained by atm
 bigmodel<-lm(td[daygs]~difftwr$H_1[daygs]+difftwr$LE_1[daygs]+difftwr$NETRAD[daygs]+difftwr$WS[daygs]+difftwr$USTAR_1[daygs]+diffsap[daygs])
 summary(bigmodel)
 #Sap significant, but still only explains a tiny fraction of variation
+#####
 
-#Does aggregating by day affect anything?
+####DOY linear modeling prep/correlation plot####
 daydiff<-aggregate(difftwr[dayind,], by=list(wcr.twr$DOY[dayind]), FUN='mean', na.rm=TRUE)
 daysap<-aggregate(diffsap[dayind], by=list(wcr.twr$DOY[dayind]), FUN='sum' )$x
 daytd<-aggregate(td[dayind], by=list(wcr.twr$DOY[dayind]), FUN='mean' )$x
@@ -670,14 +655,13 @@ colnames(compday)<-c('H','LE','U*','SoilMoist','NetRad','T','TD','TS')
 
 corrplot(compday,method="shade",diag=FALSE,type='upper', addCoef.col='black',number.cex=0.7,
          tl.col='black',tl.cex=1, mar=c(1,1,1,1), tl.srt=45, font=2, outline=TRUE, addgrid.col='black')
-
-
+#####
+####Linear modeling by DOY####
 
 summary(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
 summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$NETRAD_1))
 summary(lm(daydf$daytd~daydf$H_1+daydf$USTAR_1+daydf$daysap+daydf$NETRAD_1))
-summary(lm(daydf$daytd~daydf$daysap)
-
+summary(lm(daydf$daytd~daydf$daysap))
 summary(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysap))
 
 AIC(lm(daydf$daytd~daydf$H_1+daydf$NETRAD_1))
@@ -687,7 +671,9 @@ AIC(lm(daydf$daytd~daydf$daysap))
         
 AIC(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysap))
         
+#####
 
+####Albedo####
 albdiff<-wcr.alb-syv.alb;albdiff[abs(albdiff)>1]<-NA
 
 albdiff.doy<-aggregate(albdiff, by=list(wcr.master$DOY), FUN='mean', na.rm=TRUE)$x
@@ -696,10 +682,4 @@ albdiff.sm<-rollapply(albdiff.doy, width=7,FUN='mean')
 plot(albdiff.sm, type='l', lwd=3, ylim=c(-0.05,0.15), col='forest green', 
      font=2, font.lab=2, ylab='Albedo change (unitless)', xlab='Day of Year')
 abline(h=0)
-
-
-wcr.forest.wood<-aggregate(wcr.forest$SWA, by=list(wcr.forest$species), FUN='sum')
-syv.forest.wood<-aggregate(syv.forest$SWA, by=list(syv.forest$species), FUN='sum')
-
-dacsa<-wcr.forest.wood[1,2]-syv.forest.wood[1,2]
 
