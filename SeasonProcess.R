@@ -19,8 +19,8 @@ colnames(syv.dat)<-syv.names[5:24]
 
 ##Scale to sap flow
 #SYV
-treemult.syv<-(syv.tree$Multiplier*(syv.tree$SWA/10000))
-treemult.syv[3]<-(syv.tree$SWA[3])/10000
+treemult.syv<-(syv.tree$MULT_meas*(syv.tree$SWA_meas/10000))
+treemult.syv[3]<-(syv.tree$SWA_meas[3])/10000
 
 Flow<-(sweep(syv.dat,2,treemult.syv,'*'))
 Flow.pd<-Flow*1800  #1800 seconds in 30 min
@@ -32,8 +32,8 @@ rm('treemult.syv','Flow','Flow.pd')
 
 #WCR
 
-treemult.wcr<-(wcr.tree$Multiplier*(wcr.tree$SWA/10000))
-treemult.wcr[3]<-(wcr.tree$SWA[3])/10000
+treemult.wcr<-(wcr.tree$MULT_meas*(wcr.tree$SWA_meas/10000))
+treemult.wcr[3]<-(wcr.tree$SWA_meas[3])/10000
 
 Flow<-(sweep(wcr.dat,2,treemult.wcr,'*'))
 Flow.pd<-Flow*1800  #1800 seconds in 30 min
@@ -363,7 +363,7 @@ for (t in 1:length(treemult.syv)){
 alltree.syv<-data.frame(alltree.syv)  #units: g/s  (m2 * g/m2-s)
 alltree.syv.pd<-alltree.syv*86400/1000
 alltree.syv.pd.new<<-alltree.syv.pd  #Convert to kg/day which is the same as L/day
-site.total.syv<-rowSums(alltree.syv.pd)*1.27  #1.27 accounts for areas not surveyed
+site.total.syv<<-rowSums(alltree.syv.pd)*1.27  #1.27 accounts for areas not surveyed
 }
 
 syv.scale(syv.lut,treemult.syv)
@@ -399,7 +399,7 @@ for (t in 1:length(treemult.wcr)){
 alltree.wcr<-data.frame(alltree.wcr)  #units: g/s  (m2 * g/m2-s)
 alltree.wcr.pd<-alltree.wcr*86400/1000
 alltree.wcr.pd.new<<-alltree.wcr.pd  #Convert to kg/day which is the same as L/day
-site.total.wcr<-rowSums(alltree.wcr.pd)*1.27  #1.27 accounts for areas not surveyed
+site.total.wcr<<-rowSums(alltree.wcr.pd)*1.27  #1.27 accounts for areas not surveyed
 }
 
 wcr.scale(wcr.lut,treemult.wcr)
@@ -558,6 +558,16 @@ legend(1,10,legend=c('Sugar Maple','Eastern Hemlock','Yellow Birch','Basswood','
 
 
 #Intersite comparison
+
+#Overlain silhouettes
+plot(wcr.sm.tot[gs], col='white', ylim=c(0,6000), xlim=c(min(gs),max(gs)), ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs]+wcr.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='dark graY')
+polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs]+syv.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='black')
+
+polygon(x=c(156,156,177,177),y=c(0,3000,3000,0), col='dark gray', border=NA)
+polygon(x=c(170,170,177,177),y=c(3000,4500,4500,3000), col='dark gray', border=NA)
+
+
 movwin<-function(subject,length){
   sm<-rollapply(subject, length, FUN='mean',na.rm=TRUE)
   sm.new<<-sm
@@ -575,6 +585,7 @@ diffs.gf[75:111]<-seq(from=diffs[74], to=diffs[111], length.out=111-74)
 diffs.gf[246:253]<-seq(from=diffs[245], to=diffs[253], length.out=253-245)
 diffs.gf[155:178]<-seq(from=diffs[155], to=diffs[178], length.out=178-154)
 
+#Line (w/color code)
 par(mfrow=c(1,1))
 plot(diffs.gf, type='l', main='WCR-SYV', ylab='Transp. difference (L day-1)', lwd=3, lty=2, font=2, font.lab=2, xlab='Day of Year', col='white')
 lines(diffs.gf, col='dark red', lwd=2,lty=2);lines(diffs, lwd=3, col='dark red')
@@ -582,6 +593,7 @@ clip(0, length(diffs.gf),0, max(diffs.gf, na.rm=TRUE))
 lines(diffs.gf, col='forest green', lwd=2,lty=2);lines(diffs, lwd=3, col='forest green')
 abline(h=0, lwd=2)
 
+#Blue-black style (for use with TS_analyses plots)
 syv.sm[156:176]<-NA
 plot(wcr.sm, col='blue', type='l', lwd=3, ylab='Transpiration (L Day-1)', xlab='Day of Year')
 lines(syv.sm, type='l',lwd=3)
@@ -606,7 +618,7 @@ wcr.acsanorm<-wcr.sm.pct/wcr.ba.norm[1]
 wcr.tiamnorm<-wcr.ab.pct/wcr.ba.norm[2]
 wcr.osvinorm<-wcr.hb.pct/wcr.ba.norm[3]
 wcr.frpenorm<-wcr.ga.pct/wcr.ba.norm[4]
-wcr.uknorm<-wcr.uk.pct/wcr.ba.norm[5]
+#wcr.uknorm<-wcr.uk.pct/wcr.ba.norm[5]
 
 wcr.perba<-cbind(wcr.acsanorm,wcr.tiamnorm,wcr.osvinorm,wcr.frpenorm)
 
@@ -637,7 +649,7 @@ syv.acsanorm<-syv.sm.pct/syv.ba.norm[1]
 syv.tscanorm<-syv.hl.pct/syv.ba.norm[2]
 syv.osvinorm<-syv.hb.pct/syv.ba.norm[3]
 syv.bealnorm<-syv.yb.pct/syv.ba.norm[4]
-syv.uknorm<-syv.uk.pct/syv.ba.norm[5]
+#syv.uknorm<-syv.uk.pct/syv.ba.norm[5]
 
 syv.perba<-cbind(syv.acsanorm,syv.tscanorm,syv.osvinorm,syv.bealnorm)
 

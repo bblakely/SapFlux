@@ -216,3 +216,10 @@ wcr.twr<-data.frame(na.approx(wcr.twr, maxgap=2))
 syv.twr<-data.frame(na.approx(syv.twr, maxgap=2))
 
 histmiss(wcr.twr)
+
+#Reset master data
+syv.master<-cbind(syv.ts$YEAR,syv.twr.2016[,7],syv.ap[,3:10],syv.gap,syv.twr.2016[,10:35])
+colnames(syv.master)[1]<-'YEAR'
+
+wcr.master<-cbind(wcr.ts$YEAR,wcr.twr.2016[,7],wcr.ap[,3:10],wcr.gap,wcr.twr.2016[,10:35])
+colnames(wcr.master)[1]<-'YEAR'

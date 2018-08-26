@@ -28,7 +28,7 @@ densanalog<-matrix(nrow=nrow(dat.order), ncol=ncol(compare)-3)
 colnames(densanalog)<-colnames(compare)[4:ncol(compare)]
 
 library(beepr)
-for (i in 1:nrow(dat.order)){ 
+for (i in 1:nrow(dat.order)){ #On some machines you must do this piecewise
   taxn<-as.character(dat.order$PalEON[i])
   col<-which(colnames(companalog)==taxn)
   
