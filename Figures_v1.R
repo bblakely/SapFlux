@@ -1,5 +1,7 @@
 #Figures! Yay!
 
+#Test new version
+
 #Subset to GS
 
 wcr.sapfig<-wcr.gap[wcr.ts$DOY%in%gs,]
