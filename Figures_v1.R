@@ -1,6 +1,10 @@
 #Figures! Yay!
 
-#Test new version
+source('Prepare_Data.R')
+source('Refine_TowerData.R')
+source('Calc_Sapflow_Full.R')
+
+
 
 #Subset to GS
 
@@ -19,7 +23,8 @@ syv.sapday<-aggregate(syv.gap[syv.ts$DOY%in%gs,], by=list(syv.ts$DOY[syv.ts$DOY%
 #boxplot((syv.sapday[2:21])[order(syv.tree$SPP)], col=syv.tree$col[order(syv.tree$SPP)])
 
 
-#Maple barplots!
+###Maple barplots!
+
 wcr.maple<-wcr.sapday[,1+which(wcr.tree$SPP=="ACSA")]
 wcr.maple$mean<-rowMeans(wcr.maple)
 
@@ -33,7 +38,10 @@ boxplot(wcr.maple[6],at=8, add=TRUE, col='orange', names="Mean", width=1.2)
 
 boxplot(syv.maple, ylim=c(0,50), xlim=c(0,9),col=c(rep(NA,7), "orange"), main="SYV maples")
 
-#Measured trees, flux
+
+
+###Measured trees, flux
+
 wcr.tree$flux<-colMeans(wcr.sapday[2:15])
 syv.tree$flux<-colMeans(syv.sapday[2:21], na.rm=TRUE)
 
@@ -46,9 +54,9 @@ fluxord.syv<-c(3,1,2,4)
 boxplot(syv.tree$flux~syv.tree$SPP, at=fluxord.syv, col=c('orange',' blue','dark red','forest green'), ylim=c(0,30))
 
 
-#Profiles
-#Option 1, multipanel
+###Profiles
 
+#Option 1, multipanel
 par(mfrow=c(2,2))
 for(p in 1:length(unique(syv.tree$SPP))){
 name<-as.character(unique(syv.tree$SPP)[p])
@@ -57,7 +65,6 @@ for(i in which(syv.tree$SPP==name)){
  lines((aggregate(syv.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=syv.tree$col[syv.tree$SPP==name],lwd=2)
 }
 }
-
 
 for(p in 1:length(unique(wcr.tree$SPP))){
   name<-as.character(unique(wcr.tree$SPP)[p])
@@ -68,7 +75,6 @@ for(p in 1:length(unique(wcr.tree$SPP))){
 }
 
 #option 2, all on one
-
 par(mfrow=c(1,2))
 plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70))
 
@@ -81,7 +87,6 @@ for(p in 1:length(unique(syv.tree$SPP))){
   lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=syv.tree$col[syv.tree$SPP==name], lwd=3)
   
 }
-
 
 plot(wcr.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70))
 
@@ -124,13 +129,13 @@ for(p in 1:length(unique(wcr.tree$SPP))){
   arrows(unique(ts.gs$HOUR)+1, sphr+spsd,unique(ts.gs$HOUR)+1, sphr-spsd, length=0.01,angle=90, code=3)
 }
 
-###OKAY NOW FLOW
 
-#Measured trees, flow
+
+###Measured trees, flow
+
 wcr.site<-sweep(wcr.gap, 2,((wcr.tree$SWA_calc/10000)*wcr.tree$MULT_calc), FUN='*')*1800/1000
 syv.site<-sweep(syv.gap, 2,((syv.tree$SWA_calc/10000)*syv.tree$MULT_calc), FUN='*')*1800/1000
 
-#
 wcr.flow.gs<-wcr.site[wcr.ts$DOY%in%gs,]
 wcr.flow.day<-aggregate(wcr.flow.gs,by=list(ts.gs$DOY), FUN='mean')
 
@@ -143,11 +148,13 @@ syv.flow.tr<-colMeans(syv.flow.day, na.rm=TRUE)[2:21]
 wcr.tree$flow<-wcr.flow.tr
 syv.tree$flow<-syv.flow.tr
 
-boxplot(wcr.tree$flow~wcr.tree$SPP)
-boxplot(syv.tree$flow~syv.tree$SPP)
+#Currently 
+#boxplot(wcr.tree$flow~wcr.tree$SPP)
+#boxplot(syv.tree$flow~syv.tree$SPP)
 
-#Plots with flow scaled
 
+
+###Plots with flow scaled
 
 wcr.forest.day<-aggregate(wcr.mega[dayind,], by=list(wcr.master$DOY[dayind]), FUN='sum')[,2:305]
 syv.forest.day<-aggregate(syv.mega[dayind,], by=list(syv.master$DOY[dayind]), FUN='sum')[,2:303]
@@ -158,14 +165,144 @@ boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('ora
 boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,100))
 boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,100))
 
+#Decided against flow profiles; if plot level, redundant with flux.
+#If stand level, waaay too many curves.
 
-#temporary
-plot(aggregate(syv.site[,1], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
-for(i in 1:ncol(syv.site)){
-  lines(aggregate(syv.site[,i], by=list(syv.master$H), FUN='mean', na.rm=TRUE), col=syv.tree$col[i])
+
+###Sap flux breakdown
+
+par(mfrow=c(1,1))
+syv.forest.rad<-read.csv('SYV_FOREST_RAD.csv')#Check these; probably not updated for TSCA allometry...
+wcr.forest.rad<-read.csv('WCR_FOREST_RAD.csv')
+
+stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs=gs, ylim=8500, errbar=TRUE){
+  
+  wcr.flow.b<-colMeans(wcr.flow[gs,], na.rm=TRUE) #Mean daily transp. for each tree
+  syv.flow.b<-colMeans(syv.flow[gs,], na.rm=TRUE)
+  syv.tree.b<-syv.tree
+  wcr.tree.b<-wcr.tree
+  
+  wcr.b<-aggregate(wcr.flow.b, by=list(wcr.tree.b$SPP), FUN=sum,na.rm=TRUE)
+  syv.b<-aggregate(syv.flow.b, by=list(syv.tree.b$SPP), FUN=sum, na.rm=TRUE)
+  
+  sites.b<-merge(x=syv.b,y=wcr.b, by='Group.1', all=TRUE)
+  sites.b<-sites.b[,2:3]
+  sites.b[is.na(sites.b)]<-0
+  
+  sites.b<-rbind(sites.b[1:4,],sites.b[6:8,],sites.b[5,])
+  
+  barplot(as.matrix(sites.b), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
+          main='Total Sap Flow',names.arg=c('SYV','WCR'),ylab='Sap Flow (L day-1)', ylim=c(0,ylim), 
+          cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2)
+  if (errbar==TRUE){
+  centers<-barplot(as.matrix(sites.b), plot=FALSE)
+  
+  syv.all<-rowSums(syv.flow[gs,]); wcr.all<-rowSums(wcr.flow[gs,])
+  syv.sd<-sd(syv.all, na.rm=TRUE); wcr.sd<-sd(wcr.all, na.rm=TRUE)
+  
+  arrows(centers[1],mean(syv.all, na.rm=TRUE)-syv.sd,centers[1],mean(syv.all, na.rm=TRUE)+syv.sd, length=0, lwd=2)
+  arrows(centers[2],mean(wcr.all, na.rm=TRUE)-wcr.sd,centers[2],mean(wcr.all, na.rm=TRUE)+wcr.sd, length=0, lwd=2)
+  }
+  
+}
+par(mar=c(4,5,4,2))
+stackflow(syv.forest.day,wcr.forest.day,syv.forest.rad,wcr.forest.rad,gs)
+
+#Original
+#source('SeasonProcess.R')
+#stackflow(syv.forest.day,wcr.forest.day,syv.forest.rad,wcr.forest.rad,c(177:238))
+
+
+
+###Hydromet profiles
+
+plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot='ALL', set.par=TRUE){
+  
+  if(set.par=="TRUE"){par(mfrow=c(1,2))}
+  
+  for(v in 1:length(varset)){
+    
+    varcol1<-which(colnames(dat1)==varset[v])
+    varcol2<-which(colnames(dat2)==varset[v])
+    
+    if(allhr==FALSE){
+      hrmult<-length(unique(dat1$HOUR))/24
+      ndays<-ndays*hrmult}
+    
+    
+    sm1<-rollapply(dat1[,varcol1], 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
+    sm2<-rollapply(dat2[,varcol2], 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
+    
+    date<-rollapply(dat1$DTIME, 48*ndays, FUN='mean', na.rm=TRUE, fill=NA, partial=TRUE)
+    
+    sm1[dat1$DTIME>41&dat1$DTIME<55]<-NA #NAN spiky sefction
+    sm2[dat2$DTIME>41&dat2$DTIME<55]<-NA #NAN spiky sefction
+    
+    
+    ylim=c(min(c(sm1,sm2), na.rm=TRUE), max(c(sm1,sm2), na.rm=TRUE))
+    
+    if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression(paste(degree,'C'))}else{ylab<-'Wm-2'}
+    if(varset[v]=="VPD_PI_1"){ylab<-"hPa"};if(varset[v]=="SWC_1"|varset[v]=="SWC_1_2_1"){ylab<-"%"}
+     
+    ##Absolute plot
+    if(allplot=="ALL"|allplot=="ABS"){
+      plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
+      lines(sm2~date, type='l',lwd=2)
+      
+      legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
+    }
+    
+    ##Difference plot
+    if(allplot=="ALL"|allplot=="DIF"){
+      #Set plot margins to force zero
+      ylim=c(min(sm1-sm2, na.rm=TRUE),max(sm1-sm2, na.rm=TRUE))
+      if(min(sm1-sm2, na.rm=TRUE)>0){ylim=c(0, max(sm1-sm2, na.rm=TRUE))}
+      if(max(sm1-sm2, na.rm=TRUE)<0){ylim=c(min(sm1-sm2, na.rm=TRUE), 0)}
+      
+      #Plotting
+      plot((sm1-sm2)~date, type='l', ylab=ylab,xlab='Day of Year', main="WCR-SYV", lwd=3, col='white', font=2,font.lab=2, ylim=ylim)
+      lines((sm1-sm2)~date, type='l', lwd=3, col='dark red')
+      clip(min(date), max(date),0, max(sm1-sm2,na.rm=TRUE))
+      lines((sm1-sm2)~date, type='l', lwd=3, col='forest green')
+      abline(h=0, lwd=4)
+    }
+    
+  }
 }
 
-plot(aggregate(wcr.site[,1], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col='white', ylim=c(0,3))
-for(i in 1:ncol(wcr.site)){
-  lines(aggregate(wcr.site[,i], by=list(wcr.master$H), FUN='mean', na.rm=TRUE), col=wcr.tree$col[i])
-}
+plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("LE_1","VPD_PI_1","SWC_1"), allhr=FALSE)
+
+###Hysteresis
+
+
+###Temp profiles
+
+#Setup temp vars
+syv.temp<-rowMeans(syv.master[7:10])
+wcr.temp<-Lag(rowMeans(wcr.master[7:9]),-2)
+
+####NAN areas with implausible jumps in temperature####
+
+wcr.twr$TA_1[wcr.twr$TA_1<(-32)]<-NA
+jumps<-unique(c(which(abs(diff(wcr.twr$TA_1))>10), which(abs(diff(wcr.twr$TA_1))>10)+1))
+wcr.twr$TA_1[jumps]<-NA
+
+jump.a<-which(abs(diff(wcr.master$TA_1,1))>8) 
+wcr.master$TA_1[jump.a]<-NA
+
+jump.s<-which(abs(diff(wcr.temp))>8) 
+wcr.temp[jump.s]<-NA
+
+syv.temp[is.na(wcr.temp)]<-NA
+wcr.temp[is.na(syv.temp)]<-NA
+#####
+
+#Ts - Ta; negative: surface cooler. Positive: Atm cooler
+syv.td<-syv.temp-syv.master$TA_1; wcr.td<-wcr.temp-wcr.master$TA_1
+
+wcr.master$TS<-wcr.temp; colnames(wcr.master)[3]<-'DTIME'; wcr.master$TD<-wcr.td
+syv.master$TS<-syv.temp; colnames(syv.master)[3]<-'DTIME'; syv.master$TD<-syv.td
+
+colnames(wcr.master)[colnames(wcr.master)=='H']<-'HOUR';colnames(syv.master)[colnames(syv.master)=='H']<-'HOUR'
+
+plotsmooth(dat1=wcr.master[daygs,],dat2=syv.master[daygs,], ndays=7,varset=c("TA_1","TS","TD"), allhr=FALSE)
