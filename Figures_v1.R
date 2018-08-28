@@ -28,7 +28,19 @@ par(mfrow=c(1,3))
 #Basal area
 conv.m2h<-1e-4/0.64 #1e-4 m2 per cm2, 0.64 hectares
 lab.ba<-expression("Basal Area ("*m^2~ha^-1*")")
-barplot(c(sum(syv.forest$ba*conv.m2h), sum(wcr.forest$ba*conv.m2h)),names.arg=c('PF','SF'), ylab=lab.ba)
+####Process basal area####
+wcr.basal<-aggregate(wcr.forest.rad$BA, by=list(wcr.forest.rad$SPP), FUN=sum)
+syv.basal<-aggregate(syv.forest.rad$BA, by=list(syv.forest.rad$SPP), FUN=sum)
+
+sites.ba<-merge(x=syv.basal,y=wcr.basal, by='Group.1', all=TRUE)
+sites.ba<-sites.ba[,2:3];sites.ba[is.na(sites.ba)]<-0
+sites.ba<-rbind(sites.ba[1:4,],sites.ba[6:8,],sites.ba[5,])
+#####
+
+barplot(as.matrix(sites.ba*conv.m2h), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
+        names.arg=c('PF','SF'),ylab=lab.ba)
+#Formatting stuff
+#cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2
 
 #LAI
 LAI<-read.csv('LAI_2016_2017.csv')
