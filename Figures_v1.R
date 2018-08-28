@@ -4,7 +4,7 @@ source('Prepare_Data.R')
 source('Refine_TowerData.R')
 source('Calc_Sapflow_Full.R')
 
-
+dev.off()
 
 #Subset to GS
 
@@ -22,8 +22,52 @@ syv.sapday<-aggregate(syv.gap[syv.ts$DOY%in%gs,], by=list(syv.ts$DOY[syv.ts$DOY%
 #boxplot((wcr.sapday[2:15])[order(wcr.tree$SPP)], col=wcr.tree$col[order(wcr.tree$SPP)])
 #boxplot((syv.sapday[2:21])[order(syv.tree$SPP)], col=syv.tree$col[order(syv.tree$SPP)])
 
+###Forest specs
+par(mfrow=c(1,3))
 
-###Maple barplots!
+#Basal area
+conv.m2h<-1e-4/0.64 #1e-4 m2 per cm2, 0.64 hectares
+lab.ba<-expression("Basal Area ("*m^2~ha^-1*")")
+barplot(c(sum(syv.forest$ba*conv.m2h), sum(wcr.forest$ba*conv.m2h)),names.arg=c('PF','SF'), ylab=lab.ba)
+
+#LAI
+LAI<-read.csv('LAI_2016_2017.csv')
+LAI.2016<-LAI[LAI$YEAR==2016,]
+####Processing LAI####
+lai.wcr<-approx(LAI.2016$DOY,LAI.2016$WCR,n=126)
+lai.wcrm<-approx(LAI.2016$DOY,LAI.2016$WCRM,n=126)
+lai.syv<-approx(LAI.2016$DOY,LAI.2016$SYV, n=135)
+lai.und<-approx(LAI.2016$DOY,LAI.2016$UND, n=96)
+
+doys<-seq(130,264)
+syv.l<-data.frame(cbind(doys,lai.syv$y))
+
+doys<-seq(139,264)
+wcr.l<-data.frame(cbind(doys,lai.wcr$y))
+wcrm.l<-data.frame(cbind(doys,lai.wcrm$y))
+
+doys<-seq(169,264)
+und.l<-data.frame(cbind(doys,lai.und$y))
+
+lai.1<-merge(syv.l,wcr.l, by="doys",all.x=TRUE,all.y=TRUE)
+lai.2<-merge(lai.1,wcrm.l, by="doys",all.x=TRUE,all.y=TRUE)
+lai.3<-merge(lai.2,und.l, by="doys",all.x=TRUE,all.y=TRUE)
+
+LAI.dat<-lai.3
+colnames(LAI.dat)<-c('DOY','SYV',"WCR","WCRM","UND")
+
+rm('lai.1','lai.2','lai.3','und.l','wcr.l','syv.l','wcrm.l','lai.wcr','lai.wcrm','lai.und','lai.syv')
+lai.wcr<-mean(LAI.dat$WCR[LAI.dat$DOY%in%gs]) 
+lai.syv<-mean(LAI.dat$SYV[LAI.dat$DOY%in%gs])
+#####
+barplot(c(lai.syv, lai.wcr), ylab="LAI (unitless)",col=c('gray20', 'dark gray'))
+
+#Stem density
+ylab.s<-expression("Density ("*stems~ha^-1*")")
+barplot(c(nrow(syv.forest)/0.64, nrow(wcr.forest)/0.64), ylab=ylab.s, col=c('gray20', 'dark gray'))
+
+
+###Maple barplots!"SYV
 
 wcr.maple<-wcr.sapday[,1+which(wcr.tree$SPP=="ACSA")]
 wcr.maple$mean<-rowMeans(wcr.maple)
