@@ -23,11 +23,15 @@ syv.sapday<-aggregate(syv.gap[syv.ts$DOY%in%gs,], by=list(syv.ts$DOY[syv.ts$DOY%
 #boxplot((syv.sapday[2:21])[order(syv.tree$SPP)], col=syv.tree$col[order(syv.tree$SPP)])
 
 ###Forest specs
-par(mfrow=c(1,3))
+par(mfrow=c(1,4));
 
-#Basal area
-conv.m2h<-1e-4/0.64 #1e-4 m2 per cm2, 0.64 hectares
-lab.ba<-expression("Basal Area ("*m^2~ha^-1*")")
+
+#Legend
+par(mar=c(0,0,0,0))
+plot(c(1:10),c(1:10), col='white', bty='n', xaxt='n', yaxt='n', ylab='', xlab='')
+legend(2,6,legend=c('Sugar Maple','Eastern Hemlock','Yellow Birch','Basswood','Hophornbeam','Other'),
+       fill=c('orange','forest green','blue','yellow','dark red','gray'), text.font=1.8, x.intersp=0.5,y.intersp=0.8)
+
 ####Process basal area####
 wcr.basal<-aggregate(wcr.forest.rad$BA, by=list(wcr.forest.rad$SPP), FUN=sum)
 syv.basal<-aggregate(syv.forest.rad$BA, by=list(syv.forest.rad$SPP), FUN=sum)
@@ -36,16 +40,9 @@ sites.ba<-merge(x=syv.basal,y=wcr.basal, by='Group.1', all=TRUE)
 sites.ba<-sites.ba[,2:3];sites.ba[is.na(sites.ba)]<-0
 sites.ba<-rbind(sites.ba[1:4,],sites.ba[6:8,],sites.ba[5,])
 #####
-
-barplot(as.matrix(sites.ba*conv.m2h), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
-        names.arg=c('PF','SF'),ylab=lab.ba)
-#Formatting stuff
-#cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2
-
-#LAI
+####Processing LAI####
 LAI<-read.csv('LAI_2016_2017.csv')
 LAI.2016<-LAI[LAI$YEAR==2016,]
-####Processing LAI####
 lai.wcr<-approx(LAI.2016$DOY,LAI.2016$WCR,n=126)
 lai.wcrm<-approx(LAI.2016$DOY,LAI.2016$WCRM,n=126)
 lai.syv<-approx(LAI.2016$DOY,LAI.2016$SYV, n=135)
@@ -69,14 +66,29 @@ LAI.dat<-lai.3
 colnames(LAI.dat)<-c('DOY','SYV',"WCR","WCRM","UND")
 
 rm('lai.1','lai.2','lai.3','und.l','wcr.l','syv.l','wcrm.l','lai.wcr','lai.wcrm','lai.und','lai.syv')
-lai.wcr<-mean(LAI.dat$WCR[LAI.dat$DOY%in%gs]) 
-lai.syv<-mean(LAI.dat$SYV[LAI.dat$DOY%in%gs])
+lai.wcr<-mean(LAI.dat$WCR[LAI.dat$DOY%in%gs]);rg.wcr<-range(LAI.dat$WCR[LAI.dat$DOY%in%gs])
+lai.syv<-mean(LAI.dat$SYV[LAI.dat$DOY%in%gs]);rg.syv<-range(LAI.dat$SYV[LAI.dat$DOY%in%gs])
+
 #####
-barplot(c(lai.syv, lai.wcr), ylab="LAI (unitless)",col=c('gray20', 'dark gray'))
+
+par(mar=c(4,5.5,4,2))
+
+#Basal area
+conv.m2h<-1e-4/0.64 #1e-4 m2 per cm2, 0.64 hectares
+lab.ba<-expression("Basal Area ("*m^2~ha^-1*")")
+barplot(as.matrix(sites.ba*conv.m2h), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
+        names.arg=c('PF','SF'),ylab=lab.ba,cex.axis=1.5, cex.lab=2, cex.names=2, font.axis=2,font.lab=2,font.main=2)
+
+#LAI
+barplot(c(lai.syv, lai.wcr), ylab="LAI (unitless)",col=c('gray30', 'dark gray'),names.arg=c('PF','SF'),ylim=c(0,6.5),
+        cex.axis=1.5, cex.lab=2, cex.names=2, font.axis=2,font.main=2)
+centers<-barplot(c(lai.wcr,lai.syv), plot=FALSE)
+arrows(centers[1],rg.syv[1],centers[1],rg.syv[2],length=0, lwd=2);arrows(centers[2],rg.wcr[1],centers[2],rg.wcr[2],length=0, lwd=2)
 
 #Stem density
 ylab.s<-expression("Density ("*stems~ha^-1*")")
-barplot(c(nrow(syv.forest)/0.64, nrow(wcr.forest)/0.64), ylab=ylab.s, col=c('gray20', 'dark gray'))
+barplot(c(nrow(syv.forest)/0.64, nrow(wcr.forest)/0.64), ylab=ylab.s, col=c('gray30', 'dark gray'),names.arg=c('PF','SF'),
+        cex.axis=1.5, cex.lab=2, cex.names=2, font.axis=2,font.lab=2)
 
 
 ###Maple barplots!"SYV
