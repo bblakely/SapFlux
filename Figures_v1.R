@@ -24,8 +24,6 @@ syv.sapday<-aggregate(syv.gap[syv.ts$DOY%in%gs,], by=list(syv.ts$DOY[syv.ts$DOY%
 
 ###Forest specs
 par(mfrow=c(1,4));
-
-
 #Legend
 par(mar=c(0,0,0,0))
 plot(c(1:10),c(1:10), col='white', bty='n', xaxt='n', yaxt='n', ylab='', xlab='')
@@ -72,7 +70,6 @@ lai.syv<-mean(LAI.dat$SYV[LAI.dat$DOY%in%gs]);rg.syv<-range(LAI.dat$SYV[LAI.dat$
 #####
 
 par(mar=c(4,5.5,4,2))
-
 #Basal area
 conv.m2h<-1e-4/0.64 #1e-4 m2 per cm2, 0.64 hectares
 lab.ba<-expression("Basal Area ("*m^2~ha^-1*")")
@@ -92,6 +89,7 @@ barplot(c(nrow(syv.forest)/0.64, nrow(wcr.forest)/0.64), ylab=ylab.s, col=c('gra
 
 
 ###Maple barplots!"SYV
+par(mfrow=c(1,2))
 
 wcr.maple<-wcr.sapday[,1+which(wcr.tree$SPP=="ACSA")]
 wcr.maple$mean<-rowMeans(wcr.maple)
@@ -99,12 +97,13 @@ wcr.maple$mean<-rowMeans(wcr.maple)
 syv.maple<-syv.sapday[,1+which(syv.tree$SPP=="ACSA")]
 syv.maple$mean<-rowMeans(syv.maple)
 
-par(mfrow=c(1,2))
+par(mfrow=c(1,2), mar=c(4,5,4,1))
 
-boxplot(wcr.maple[,1:5], ylim=c(0,50), xlim=c(0,9),col=c(rep(NA,5), "orange"), main="WCR maples")
-boxplot(wcr.maple[6],at=8, add=TRUE, col='orange', names="Mean", width=1.2)
+boxplot(wcr.maple[,1:5], ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,5), "orange"), main="SF", xaxt='n', ylab=expression("Maple Transp. "~(L~day^-1)))
+boxplot(wcr.maple[6],at=8, add=TRUE, col='orange', names="Mean", width=1.2);axis(side=1, at=8, tick=F, lab=expression(mu))
 
-boxplot(syv.maple, ylim=c(0,50), xlim=c(0,9),col=c(rep(NA,7), "orange"), main="SYV maples")
+boxplot(syv.maple, ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,7), "orange"), main="PF", xaxt='n');axis(side=1, at=8, tick=F, lab=expression(mu))
+
 
 
 
@@ -114,11 +113,9 @@ wcr.tree$flux<-colMeans(wcr.sapday[2:15])
 syv.tree$flux<-colMeans(syv.sapday[2:21], na.rm=TRUE)
 
 fluxord.wcr<-c(1,4,2,3)
-  #order(aggregate(wcr.tree$flux, by=list(wcr.tree$SPP), FUN='mean', na.rm=TRUE)$x)
 boxplot(wcr.tree$flux~wcr.tree$SPP, at=fluxord.wcr, col=c('orange', ' yellow green','dark red','yellow'), ylim=c(0,30))
 
 fluxord.syv<-c(3,1,2,4)
-#(aggregate(syv.tree$flux, by=list(syv.tree$SPP), FUN='mean', na.rm=TRUE)$x)
 boxplot(syv.tree$flux~syv.tree$SPP, at=fluxord.syv, col=c('orange',' blue','dark red','forest green'), ylim=c(0,30))
 
 
