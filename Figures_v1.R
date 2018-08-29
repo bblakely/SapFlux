@@ -295,7 +295,7 @@ stackflow(syv.forest.day,wcr.forest.day,syv.forest.rad,wcr.forest.rad,gs)
 
 plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot='ALL', set.par=TRUE){
   
-  if(set.par=="TRUE"){par(mfrow=c(1,2))}
+  if(set.par=="TRUE"){par(mfrow=c(1,2), mar=c(5,5,1,1))}
   
   for(v in 1:length(varset)){
     
@@ -321,9 +321,10 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot=
     nicename<-sub( "_1", "",colnames(dat1)[colnames(dat1)==varset[v]])
     print(nicename)
     
-    if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression("Temperature ("*paste(degree,'C')*"(")}else{ylab<-bquote(.(nicename)~"("*Wm^-2*")")}
+  
+    if(varset[v]=="TS"|varset[v]=="TA_1"){ylab<-bquote(.(nicename)~"("*paste(degree,'C')*")")}else{ylab<-bquote(.(nicename)~"("*Wm^-2*")")}
     if(varset[v]=="VPD_PI_1"){ylab<-expression("VPD"~"(hPa)")};if(varset[v]=="SWC_1"|varset[v]=="SWC_1_2_1"){ylab<-expression("Soil Water Content"~"(%)")}
-     
+    if(varset[v]=="TD"){ylab<-expression("TS - TA ("~paste(degree,'C')*")")}
     
     ##Absolute plot
     if(allplot=="ALL"|allplot=="ABS"){
