@@ -28,7 +28,10 @@ par(mfrow=c(1,4));
 par(mar=c(0,0,0,0))
 plot(c(1:10),c(1:10), col='white', bty='n', xaxt='n', yaxt='n', ylab='', xlab='')
 legend(2,6,legend=c('Sugar Maple','Eastern Hemlock','Yellow Birch','Basswood','Hophornbeam','Other'),
-       fill=c('orange','forest green','blue','yellow','dark red','gray'), text.font=1.8, x.intersp=0.5,y.intersp=0.8)
+       fill=c('orange','forest green','blue','yellow','dark red','gray'), text.font=1.8, x.intersp=0.5,y.intersp=0.8, bty='n')
+
+syv.forest.rad<-read.csv('SYV_FOREST_RAD.csv')
+wcr.forest.rad<-read.csv('WCR_FOREST_RAD.csv')
 
 ####Process basal area####
 wcr.basal<-aggregate(wcr.forest.rad$BA, by=list(wcr.forest.rad$SPP), FUN=sum)
@@ -87,8 +90,9 @@ ylab.s<-expression("Density ("*stems~ha^-1*")")
 barplot(c(nrow(syv.forest)/0.64, nrow(wcr.forest)/0.64), ylab=ylab.s, col=c('gray30', 'dark gray'),names.arg=c('PF','SF'),
         cex.axis=1.5, cex.lab=2, cex.names=2, font.axis=2,font.lab=2)
 
+par(cex.axis=1.5, cex.lab=1.5, font.axis=2,font.lab=2, cex.main=1.5)
 
-###Maple barplots!"SYV
+###Maple barplots!
 par(mfrow=c(1,2))
 
 wcr.maple<-wcr.sapday[,1+which(wcr.tree$SPP=="ACSA")]
@@ -99,24 +103,24 @@ syv.maple$mean<-rowMeans(syv.maple)
 
 par(mfrow=c(1,2), mar=c(4,5,4,1))
 
-boxplot(wcr.maple[,1:5], ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,5), "orange"), main="SF", xaxt='n', ylab=expression("Maple Transp. "~(L~day^-1)))
-boxplot(wcr.maple[6],at=8, add=TRUE, col='orange', names="Mean", width=1.2);axis(side=1, at=8, tick=F, lab=expression(mu))
+boxplot(wcr.maple[,1:5], ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,5), "orange"), main="SF", xaxt='n', ylab=expression("J"[s]~"(ACSA)"~(g~m^-2~s^-1)))
+boxplot(wcr.maple[6],at=8, add=TRUE, col='orange', names="Mean", width=1.2);axis(side=1, at=8, tick=F, lab="Avg.")
+box(lwd=3)
 
-boxplot(syv.maple, ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,7), "orange"), main="PF", xaxt='n');axis(side=1, at=8, tick=F, lab=expression(mu))
-
-
+boxplot(syv.maple, ylim=c(0,45), xlim=c(0,9),col=c(rep(NA,7), "orange"), main="PF", xaxt='n');axis(side=1, at=8, tick=F, lab="Avg.")
+box(lwd=3)
 
 
 ###Measured trees, flux
-
+par(mfrow=c(1,2))
 wcr.tree$flux<-colMeans(wcr.sapday[2:15])
 syv.tree$flux<-colMeans(syv.sapday[2:21], na.rm=TRUE)
 
 fluxord.wcr<-c(1,4,2,3)
-boxplot(wcr.tree$flux~wcr.tree$SPP, at=fluxord.wcr, col=c('orange', ' yellow green','dark red','yellow'), ylim=c(0,30))
+boxplot(wcr.tree$flux~wcr.tree$SPP, at=fluxord.wcr, col=c('orange', ' yellow green','dark red','yellow'), ylim=c(0,30), ylab=expression("J"[s]~(g~m^-2~s^-1)), main='SF')
 
 fluxord.syv<-c(3,1,2,4)
-boxplot(syv.tree$flux~syv.tree$SPP, at=fluxord.syv, col=c('orange',' blue','dark red','forest green'), ylim=c(0,30))
+boxplot(syv.tree$flux~syv.tree$SPP, at=fluxord.syv, col=c('orange',' blue','dark red','forest green'), ylim=c(0,30), main='PF')
 
 
 ###Profiles
@@ -338,6 +342,40 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot=
 plotsmooth(dat1=wcr.twr[daygs,],dat2=syv.twr[daygs,], ndays=7,varset=c("LE_1","VPD_PI_1","SWC_1"), allhr=FALSE)
 
 ###Hysteresis
+par(mfrow=c(1,2))
+####Process Hysteresis####
+dry<-8 #vpd cutoff for dryish days
+syv.maple<-syv.gap[syv.tree$SPP=='ACSA' & syv.tree$CC =='C']
+syv.dryind<-which(syv.twr$VPD_PI_1>dry & syv.twr$DOY%in%gs)
+
+wcr.maple<-wcr.gap[wcr.tree$SPP=='ACSA' & wcr.tree$CC =='C']
+wcr.dryind<-which(wcr.twr$VPD_PI_1>dry & wcr.twr$DOY%in%gs)
+
+syv.dryhour<-aggregate(rowMeans(syv.maple)[syv.dryind], by=list(syv.twr$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
+wcr.dryhour<-aggregate(rowMeans(wcr.maple)[wcr.dryind], by=list(wcr.twr$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
+
+syv.dryvp<-aggregate(syv.twr$VPD_PI_1[syv.dryind], by=list(syv.twr$HOUR[syv.dryind]), FUN='mean', na.rm=TRUE)
+wcr.dryvp<-aggregate(wcr.twr$VPD_PI_1[wcr.dryind], by=list(wcr.twr$HOUR[wcr.dryind]), FUN='mean', na.rm=TRUE)
+#####
+
+colcode<-rep('black', 24); colcode[7:13]<-"orange"; colcode[13:22]<-"blue"
+par(mar=c(4,4,4,2))
+daytime<-c(7:22)
+
+#Normalized VPD and Sapflux
+
+dayhr<-which(syv.dryhour$Group.1%in%daytime)
+syv.hrn<-(syv.dryhour$x/max(syv.dryhour$x))[dayhr]
+syv.vpdn<-(syv.dryvp$x/max(syv.dryvp$x))[dayhr]
+plot(syv.hrn[dayhr]~syv.vpdn[dayhr], col=colcode[syv.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='PF', type='l')
+arr<-seq(from=1, to=length(syv.hrn), by=1); arrows(syv.vpdn[arr],syv.hrn[arr],syv.vpdn[arr+1],syv.hrn[arr+1], length=0.07,code=2, col=colcode[dayhr], lwd=1.5)
+
+wcr.hrn<-(wcr.dryhour$x/max(wcr.dryhour$x))
+wcr.vpdn<-(wcr.dryvp$x/max(wcr.dryvp$x))
+plot(wcr.hrn~wcr.vpdn, col=colcode[wcr.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='SF', type='l')
+arr<-seq(from=1, to=length(wcr.hrn), by=1); arrows(wcr.vpdn[arr],wcr.hrn[arr],wcr.vpdn[arr+1],wcr.hrn[arr+1], length=0.07,code=2, col=colcode[daytime], lwd=1.5)
+
+
 
 
 ###Temp profiles
