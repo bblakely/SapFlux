@@ -125,7 +125,7 @@ boxplot(syv.tree$flux~syv.tree$SPP, at=fluxord.syv, col=c('orange',' blue','dark
 
 ###Profiles
 
-#Option 1, multipanel
+####Option 1, multipanel####
 par(mfrow=c(2,2))
 for(p in 1:length(unique(syv.tree$SPP))){
 name<-as.character(unique(syv.tree$SPP)[p])
@@ -142,34 +142,42 @@ for(p in 1:length(unique(wcr.tree$SPP))){
     lines((aggregate(wcr.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=wcr.tree$col[wcr.tree$SPP==name],lwd=2)
   }
 }
+#####
 
-#option 2, all on one
+#Option 2, all on one
 par(mfrow=c(1,2))
-plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70))
+plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70), ylab=expression("J"[s]~(g~m^-2~s^-1)), xlab='Hour', main='PF')
 
 for(p in 1:length(unique(syv.tree$SPP))){
   name<-as.character(unique(syv.tree$SPP)[p])
   for(i in which(syv.tree$SPP==name)){
-    lines((aggregate(syv.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=syv.tree$col[syv.tree$SPP==name],lwd=0.5, lty=3)
+    lines((aggregate(syv.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=syv.tree$col[syv.tree$SPP==name],lwd=2, lty=3)
   }
   sp<-rowMeans(syv.sapfig[,syv.tree$SPP==name], na.rm=TRUE)
-  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=syv.tree$col[syv.tree$SPP==name], lwd=3)
+  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=syv.tree$col[syv.tree$SPP==name], lwd=4)
   
 }
+box(lwd=3);abline(v=13, col='dark gray',lty=2,lwd=2)
+legend(0,73,legend=c('ACSA','TSCA','BEAL','TIAM','OSVI'),
+       fill=c('orange','forest green','blue','yellow','dark red'), text.font=2, x.intersp=0.5,y.intersp=0.8, bty='n', cex=0.7)
 
-plot(wcr.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70))
+plot(wcr.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70), xlab='Hour', main='SF',ylab='')
 
 for(p in 1:length(unique(wcr.tree$SPP))){
   name<-as.character(unique(wcr.tree$SPP)[p])
   for(i in which(wcr.tree$SPP==name)){
-    lines((aggregate(wcr.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=wcr.tree$col[wcr.tree$SPP==name],lwd=0.5, lty=3)
+    lines((aggregate(wcr.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=wcr.tree$col[wcr.tree$SPP==name],lwd=2, lty=3)
   }
   sp<-rowMeans(wcr.sapfig[,wcr.tree$SPP==name], na.rm=TRUE)
-  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=wcr.tree$col[wcr.tree$SPP==name], lwd=3)
+  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=wcr.tree$col[wcr.tree$SPP==name], lwd=4)
   
 }
+box(lwd=3);abline(v=13, col='dark gray',lty=2,lwd=2)
 
-#Option 3, maybe with error bars?
+legend(0,75, legend='Solar noon', col='dark gray', lty=2, lwd=2, cex=0.8, bty='n',text.font=2, x.intersp=0.5,y.intersp=0.8, seg.len=0.8)
+
+
+####Option 3, maybe with error bars?####
 plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70))
 
 for(p in 1:length(unique(syv.tree$SPP))){
@@ -197,7 +205,7 @@ for(p in 1:length(unique(wcr.tree$SPP))){
   
   arrows(unique(ts.gs$HOUR)+1, sphr+spsd,unique(ts.gs$HOUR)+1, sphr-spsd, length=0.01,angle=90, code=3)
 }
-
+#####
 
 
 ###Measured trees, flow
@@ -228,11 +236,11 @@ syv.tree$flow<-syv.flow.tr
 wcr.forest.day<-aggregate(wcr.mega[dayind,], by=list(wcr.master$DOY[dayind]), FUN='sum')[,2:305]
 syv.forest.day<-aggregate(syv.mega[dayind,], by=list(syv.master$DOY[dayind]), FUN='sum')[,2:303]
 
-boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,300))
-boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,300))
+boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~toupper(wcr.forest$species), col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,300), ylab=expression("Tree T. ("~L~day-1*")"), main="SF")
+boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~toupper(syv.forest$species), col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,300), main="PF")
 
-boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,100))
-boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,100))
+#boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,100))
+#boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,100))
 
 #Decided against flow profiles; if plot level, redundant with flux.
 #If stand level, waaay too many curves.
@@ -261,7 +269,7 @@ stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs=gs, ylim=8500, errb
   sites.b<-rbind(sites.b[1:4,],sites.b[6:8,],sites.b[5,])
   
   barplot(as.matrix(sites.b), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
-          main='Total Sap Flow',names.arg=c('SYV','WCR'),ylab='Sap Flow (L day-1)', ylim=c(0,ylim), 
+          names.arg=c('PF','SF'),ylab=expression('T ('*L~day^-1*')'), ylim=c(0,ylim), 
           cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2)
   if (errbar==TRUE){
   centers<-barplot(as.matrix(sites.b), plot=FALSE)
@@ -274,7 +282,7 @@ stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs=gs, ylim=8500, errb
   }
   
 }
-par(mar=c(4,5,4,2))
+par(mar=c(4,5.5,4,2))
 stackflow(syv.forest.day,wcr.forest.day,syv.forest.rad,wcr.forest.rad,gs)
 
 #Original
@@ -310,15 +318,20 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot=
     
     ylim=c(min(c(sm1,sm2), na.rm=TRUE), max(c(sm1,sm2), na.rm=TRUE))
     
-    if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression(paste(degree,'C'))}else{ylab<-'Wm-2'}
-    if(varset[v]=="VPD_PI_1"){ylab<-"hPa"};if(varset[v]=="SWC_1"|varset[v]=="SWC_1_2_1"){ylab<-"%"}
+    nicename<-sub( "_1", "",colnames(dat1)[colnames(dat1)==varset[v]])
+    print(nicename)
+    
+    if(varset[v]=="TS"|varset[v]=="TD"|varset[v]=="TA_1"){ylab<-expression("Temperature ("*paste(degree,'C')*"(")}else{ylab<-bquote(.(nicename)~"("*Wm^-2*")")}
+    if(varset[v]=="VPD_PI_1"){ylab<-expression("VPD"~"(hPa)")};if(varset[v]=="SWC_1"|varset[v]=="SWC_1_2_1"){ylab<-expression("Soil Water Content"~"(%)")}
      
+    
     ##Absolute plot
     if(allplot=="ALL"|allplot=="ABS"){
-      plot(sm1~date, type='l', col='blue', main=colnames(dat1)[varcol1], ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
+      plot(sm1~date, type='l', col='blue', ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
       lines(sm2~date, type='l',lwd=2)
+      box(lwd=3)
       
-      legend(x=min(dat1$DOY), y=quantile(ylim,0.18), legend=c('WCR','SYV'), col=c('blue', 'black'), lwd=2, cex=0.7)
+      legend(x=min(dat1$DOY), y=quantile(ylim,0.15), legend=c('SF','PF'), col=c('blue', 'black'), lwd=2, cex=0.6, x.intersp = 0.1,y.intersp = 0.5)
     }
     
     ##Difference plot
@@ -329,11 +342,12 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot=
       if(max(sm1-sm2, na.rm=TRUE)<0){ylim=c(min(sm1-sm2, na.rm=TRUE), 0)}
       
       #Plotting
-      plot((sm1-sm2)~date, type='l', ylab=ylab,xlab='Day of Year', main="WCR-SYV", lwd=3, col='white', font=2,font.lab=2, ylim=ylim)
+      plot((sm1-sm2)~date, type='l', ylab=expression(Delta),xlab='DOY', lwd=3, col='white', font=2,font.lab=2, ylim=ylim)
       lines((sm1-sm2)~date, type='l', lwd=3, col='dark red')
       clip(min(date), max(date),0, max(sm1-sm2,na.rm=TRUE))
       lines((sm1-sm2)~date, type='l', lwd=3, col='forest green')
-      abline(h=0, lwd=4)
+      abline(h=0, lwd=4, lty=2)
+      box(lwd=3)
     }
     
   }
