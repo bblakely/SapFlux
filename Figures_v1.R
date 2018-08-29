@@ -374,7 +374,7 @@ wcr.dryvp<-aggregate(wcr.twr$VPD_PI_1[wcr.dryind], by=list(wcr.twr$HOUR[wcr.dryi
 #####
 
 colcode<-rep('black', 24); colcode[7:13]<-"orange"; colcode[13:22]<-"blue"
-par(mar=c(4,4,4,2))
+par(mar=c(4.1,5,4,2))
 daytime<-c(7:22)
 
 #Normalized VPD and Sapflux
@@ -382,13 +382,15 @@ daytime<-c(7:22)
 dayhr<-which(syv.dryhour$Group.1%in%daytime)
 syv.hrn<-(syv.dryhour$x/max(syv.dryhour$x))[dayhr]
 syv.vpdn<-(syv.dryvp$x/max(syv.dryvp$x))[dayhr]
-plot(syv.hrn[dayhr]~syv.vpdn[dayhr], col=colcode[syv.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='PF', type='l')
-arr<-seq(from=1, to=length(syv.hrn), by=1); arrows(syv.vpdn[arr],syv.hrn[arr],syv.vpdn[arr+1],syv.hrn[arr+1], length=0.07,code=2, col=colcode[dayhr], lwd=1.5)
+plot(syv.hrn[dayhr]~syv.vpdn[dayhr], col=colcode[syv.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD (norm.)", ylab=expression(J[s]~(norm.)), main='PF', type='l')
+arr<-seq(from=1, to=length(syv.hrn), by=1); arrows(syv.vpdn[arr],syv.hrn[arr],syv.vpdn[arr+1],syv.hrn[arr+1], length=0.07,code=2, col=colcode[dayhr], lwd=2)
+
+legend(0.5,1, legend=c("Morning", "Afternoon"), col=c('orange','blue'), lwd=2, cex=0.8, bty='n', x.intersp = 0.2, y.intersp=0.5, seg.len=1, text.font=2)
 
 wcr.hrn<-(wcr.dryhour$x/max(wcr.dryhour$x))
 wcr.vpdn<-(wcr.dryvp$x/max(wcr.dryvp$x))
-plot(wcr.hrn~wcr.vpdn, col=colcode[wcr.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD", ylab="Flux rate", main='SF', type='l')
-arr<-seq(from=1, to=length(wcr.hrn), by=1); arrows(wcr.vpdn[arr],wcr.hrn[arr],wcr.vpdn[arr+1],wcr.hrn[arr+1], length=0.07,code=2, col=colcode[daytime], lwd=1.5)
+plot(wcr.hrn~wcr.vpdn, col=colcode[wcr.dryhour$Group.1], ylim=c(0,1), xlim=c(0.5, 1), xlab="VPD (norm.)", ylab='', main='SF', type='l')
+arr<-seq(from=1, to=length(wcr.hrn), by=1); arrows(wcr.vpdn[arr],wcr.hrn[arr],wcr.vpdn[arr+1],wcr.hrn[arr+1], length=0.07,code=2, col=colcode[daytime], lwd=2)
 
 
 
