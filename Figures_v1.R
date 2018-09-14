@@ -146,22 +146,8 @@ for(p in 1:length(unique(wcr.tree$SPP))){
 
 #Option 2, all on one
 par(mfrow=c(1,2))
-plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70), ylab=expression("J"[s]~(g~m^-2~s^-1)), xlab='Hour', main='PF')
 
-for(p in 1:length(unique(syv.tree$SPP))){
-  name<-as.character(unique(syv.tree$SPP)[p])
-  for(i in which(syv.tree$SPP==name)){
-    lines((aggregate(syv.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=syv.tree$col[syv.tree$SPP==name],lwd=2, lty=3)
-  }
-  sp<-rowMeans(syv.sapfig[,syv.tree$SPP==name], na.rm=TRUE)
-  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=syv.tree$col[syv.tree$SPP==name], lwd=4)
-  
-}
-box(lwd=3);abline(v=13, col='dark gray',lty=2,lwd=2)
-legend(0,73,legend=c('ACSA','TSCA','BEAL','TIAM','OSVI'),
-       fill=c('orange','forest green','blue','yellow','dark red'), text.font=2, x.intersp=0.5,y.intersp=0.8, bty='n', cex=0.7)
-
-plot(wcr.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70), xlab='Hour', main='SF',ylab='')
+plot(wcr.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70), xlab='Hour', main='SF',ylab=expression("J"[s]~(g~m^-2~s^-1)))
 
 for(p in 1:length(unique(wcr.tree$SPP))){
   name<-as.character(unique(wcr.tree$SPP)[p])
@@ -173,6 +159,24 @@ for(p in 1:length(unique(wcr.tree$SPP))){
   
 }
 box(lwd=3);abline(v=13, col='dark gray',lty=2,lwd=2)
+
+legend(0,73,legend=c('ACSA','TSCA','BEAL','TIAM','OSVI'),
+       fill=c('orange','forest green','blue','yellow','dark red'), text.font=2, x.intersp=0.5,y.intersp=0.8, bty='n', cex=0.7)
+
+
+plot(syv.sapfig[,1]~ts.gs$HOUR, col='white', ylim=c(0,70),ylab='', xlab='Hour', main='PF')
+
+for(p in 1:length(unique(syv.tree$SPP))){
+  name<-as.character(unique(syv.tree$SPP)[p])
+  for(i in which(syv.tree$SPP==name)){
+    lines((aggregate(syv.sapfig[,i], by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE))$x, col=syv.tree$col[syv.tree$SPP==name],lwd=2, lty=3)
+  }
+  sp<-rowMeans(syv.sapfig[,syv.tree$SPP==name], na.rm=TRUE)
+  lines(aggregate(sp, by=list(ts.gs$HOUR), FUN='mean', na.rm=TRUE)$x, col=syv.tree$col[syv.tree$SPP==name], lwd=4)
+  
+}
+box(lwd=3);abline(v=13, col='dark gray',lty=2,lwd=2)
+
 
 legend(0,75, legend='Solar noon', col='dark gray', lty=2, lwd=2, cex=0.8, bty='n',text.font=2, x.intersp=0.5,y.intersp=0.8, seg.len=0.8)
 
@@ -236,8 +240,8 @@ syv.tree$flow<-syv.flow.tr
 wcr.forest.day<-aggregate(wcr.mega[dayind,], by=list(wcr.master$DOY[dayind]), FUN='sum')[,2:305]
 syv.forest.day<-aggregate(syv.mega[dayind,], by=list(syv.master$DOY[dayind]), FUN='sum')[,2:303]
 
-boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~toupper(wcr.forest$species), col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,300), ylab=expression("Tree T. ("~L~day-1*")"), main="SF")
-boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~toupper(syv.forest$species), col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,300), main="PF")
+boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~toupper(wcr.forest$species), col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,300), ylab=expression("Tree T. ("~L~day-1*")"), main="SF", cex.axis=0.8)
+boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~toupper(syv.forest$species), col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,300), main="PF", cex.axis=0.8)
 
 #boxplot(colMeans(wcr.forest.day[gs,], na.rm=TRUE)~wcr.forest$species, col=c('orange', 'yellow green','dark red','orange4','yellow','gray'), ylim=c(0,100))
 #boxplot(colMeans(syv.forest.day[gs,], na.rm=TRUE)~syv.forest$species, col=c('orange','blue','dark red','forest green','gray'), ylim=c(0,100))
@@ -328,7 +332,7 @@ plotsmooth<-function(dat1, dat2, ndays,func='mean', varset, allhr=TRUE, allplot=
     
     ##Absolute plot
     if(allplot=="ALL"|allplot=="ABS"){
-      plot(sm1~date, type='l', col='blue', ylab=ylab, ylim=ylim,xlab='Day of Year', lwd=3, font=2, font.lab=2)
+      plot(sm1~date, type='l', col='blue', ylab=ylab, ylim=ylim,xlab='DOY', lwd=3, font=2, font.lab=2)
       lines(sm2~date, type='l',lwd=2)
       box(lwd=3)
       
