@@ -47,16 +47,17 @@ wcr.sap<-calc_wpflow(dat=wcr.wpf.dat,ts=wcr.wpf.ts)
 
 par(mfrow=c(2,2))
 for(i in 1:(ncol(syv.sap)-0)){
-  plot(syv.sap[,i+0]~syv.wpf.ts$DecDOY, type='l')
+  plot(syv.sap[,i+0]~syv.wpf.ts$DecDOY, type='l', main=i)
   abline(v=unique(syv.sap$DOY));abline(v=syv.wpf.ts$DecDOY[which(syv.wpf.ts$H==14|syv.wpf.ts$H==16)], col='blue');abline(v=syv.wpf.ts$DecDOY[which(syv.wpf.ts$H==4)], col='orange')
 }
 
 for(i in 1:(ncol(wcr.sap)-0)){
-  plot(wcr.sap[,i+0]~wcr.wpf.ts$DecDOY, type='l')
+  plot(wcr.sap[,i+0]~wcr.wpf.ts$DecDOY, type='l', main=i)
   abline(v=unique(wcr.wpf.ts$DOY)); abline(v=wcr.wpf.ts$DecDOY[which(wcr.wpf.ts$H==14|wcr.wpf.ts$H==16)], col='blue')
 }
 
-
+syv.goodsens<-c(1,2,5,7,10,13:20); syv.badsens<-c(3:4,6,8:9,11:12) #3, 4 are borderline
+wcr.goodsens<-c(1,3:6,9:14); wcr.badsens<-c(2,7:8) # 7,8 are borderline
 
 
 #Water potential data
@@ -90,7 +91,7 @@ mean(colMeans(m.wcr, na.rm=TRUE));mean(colMeans(m.syv, na.rm=TRUE))
 
 #Conductance will be WP/sapflow...
 
-#Gotta match WP to real trees
+#####Gotta match WP to real trees#####
 
 source('Prepare_Treedata.R')
 
@@ -114,5 +115,46 @@ alt2match.syv<-match(syv.tree$ID, wp.syv$Alt.ID2)
 idmatch.syv[is.na(idmatch.syv)]<-altmatch.syv[is.na(idmatch.syv)]
 idmatch.syv[is.na(idmatch.syv)]<-alt2match.syv[is.na(idmatch.syv)]
 
+
+
+#Some problems:
+#2726 is a maple, but alt-id matches to a TSCA in SYV.tree
+#280 is an orphan; it matches to nothing and has no alt-id
+
+#Randomly assign those 2 trees to the remaining 2 slots
+#2754 and 282 are missing water-potential matches
+
+idmatch.syv[16]<-3; idmatch.syv[14]<-6;idmatch.syv[4]<-NA  #16<-6 and 14<-3 are random choices. Can Switch. 
+
 syv.wp.ord<-wp.syv[idmatch.syv,]
-syv.combo<-cbind(syv.tree, syv.wp.ord[,4:ncol(syv.wp.ord)])
+syv.combo<-cbind(syv.tree, syv.wp.ord[,4:ncol(syv.wp.ord)]) #Still two mismatched/unmatched trees
+
+
+#####
+
+#Calculate means
+
+syv.combo$wpmean<-rowMeans(syv.combo[,20:25], na.rm=TRUE)
+wcr.combo$wpmean<-rowMeans(wcr.combo[,20:25], na.rm=TRUE)
+
+
+syv.pmtime<-which(syv.wpf.ts$DOY==246 & syv.wpf.ts$H%in%c(2:4));wcr.pmtime<-which(wcr.wpf.ts$DOY==244 & wcr.wpf.ts$H%in%c(2:4))
+syv.sapr<-colMeans(syv.sap[syv.pmtime,])
+wcr.sapr<-colMeans(wcr.sap[wcr.pmtime,])
+
+
+syv.combo$sap<-syv.sapr;wcr.combo$sap<-wcr.sapr
+syv.combo$sap[syv.badsens]<-NA; wcr.combo$sap[wcr.badsens]<-NA
+
+
+syv.cond<-syv.combo$sap/syv.combo$wpmean
+wcr.cond<-wcr.combo$sap/wcr.combo$wpmean
+
+
+
+syv.cond.map<-syv.cond[syv.combo$SPP=='ACSA']
+wcr.cond.map<-wcr.cond[wcr.combo$SPP=='ACSA']
+
+
+mean(syv.cond.map, na.rm=TRUE);mean(wcr.cond.map)
+
