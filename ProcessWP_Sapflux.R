@@ -158,3 +158,5 @@ wcr.cond.map<-wcr.cond[wcr.combo$SPP=='ACSA']
 
 mean(syv.cond.map, na.rm=TRUE);mean(wcr.cond.map)
 
+barplot(c(mean(syv.cond.map, na.rm=TRUE),mean(wcr.cond.map, na.rm=TRUE)))
+        

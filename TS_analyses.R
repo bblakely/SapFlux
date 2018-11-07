@@ -683,3 +683,10 @@ plot(albdiff.sm, type='l', lwd=3, ylim=c(-0.05,0.15), col='forest green',
      font=2, font.lab=2, ylab='Albedo change (unitless)', xlab='Day of Year')
 abline(h=0)
 
+syv.twr.norm<-syv.twr/syv.twr$NETRAD_1; wcr.twr.norm<-wcr.twr/wcr.twr$NETRAD_1
+
+syv.twr.norm$LE_1[is.na(syv.twr.norm$H_1)]<-NA
+
+#Barplot temperature
+
+barplot(c(mean(syv.master$TD[daygs], na.rm=TRUE),mean(wcr.master$TD[daygs], na.rm=TRUE)), names.arg=c("PF", "SF"), ylab='Surface Temp. - Air Temp.', font=2, font.axis=2, col=c("light gray", 'gray30'))
