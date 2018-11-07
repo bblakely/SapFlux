@@ -13,10 +13,16 @@ syv.sapfig<-syv.gap[syv.ts$DOY%in%gs,]
 
 ts.gs<-wcr.ts[wcr.ts$DOY%in%gs,]
 
+#To pair w/o editing gap
+wcr.sapfig[is.na(rowMeans(syv.sapfig, na.rm=TRUE)),]<-NA
+
 
 #Create daily average flux rates
 wcr.sapday<-aggregate(wcr.gap[wcr.ts$DOY%in%gs,], by=list(wcr.ts$DOY[wcr.ts$DOY%in%gs]), FUN='mean')
 syv.sapday<-aggregate(syv.gap[syv.ts$DOY%in%gs,], by=list(syv.ts$DOY[syv.ts$DOY%in%gs]), FUN='mean')
+
+#To pair without pairing gap
+wcr.sapday[is.na(rowMeans(syv.sapday[,2:21])),2:15]<-NA
 
 #Boxplots each tree. Informative, but crowded
 #boxplot((wcr.sapday[2:15])[order(wcr.tree$SPP)], col=wcr.tree$col[order(wcr.tree$SPP)])
@@ -113,7 +119,7 @@ box(lwd=3)
 
 ###Measured trees, flux
 par(mfrow=c(1,2))
-wcr.tree$flux<-colMeans(wcr.sapday[2:15])
+wcr.tree$flux<-colMeans(wcr.sapday[2:15], na.rm=TRUE)
 syv.tree$flux<-colMeans(syv.sapday[2:21], na.rm=TRUE)
 
 fluxord.wcr<-c(1,4,2,3)
