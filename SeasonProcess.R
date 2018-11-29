@@ -854,7 +854,7 @@ alltree.syv.pd.new->syv.nd
 
 #Barplots of total flow
 
-stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs){
+stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs, title="Total Sap Flow"){
 
 wcr.flow.b<-colMeans(wcr.flow[gs,], na.rm=TRUE)
 syv.flow.b<-colMeans(syv.flow[gs,], na.rm=TRUE)
@@ -871,14 +871,15 @@ sites.b[is.na(sites.b)]<-0
 sites.b<-rbind(sites.b[1:4,],sites.b[6:8,],sites.b[5,])
 
 barplot(as.matrix(sites.b), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
-        main='Total Sap Flow',names.arg=c('SYV','WCR'),ylab='Sap Flow (L day-1)', ylim=c(0,7000), 
+        main=title,names.arg=c('SYV','WCR'),ylab='Sap Flow (L day-1)', ylim=c(0,7000), 
         cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2)
 }
 par(mar=c(4,5,4,2))
-stackflow(alltree.syv.pd,alltree.wcr.pd,syv.forest.rad,wcr.forest.rad,c(177:238))  
-stackflow(syv.smpool,wcr.smpool,syv.forest.rad,wcr.forest.rad,c(177:238)) #Total reversal
-stackflow(syv.dcpool,wcr.dcpool,syv.forest.rad,wcr.forest.rad,c(177:238)) #About the same
-stackflow(syv.nd,wcr.nd,syv.forest.rad,wcr.forest.rad,c(177:238)) #Bigger difference
+par(mfrow=c(1,3))
+stackflow(alltree.syv.pd,alltree.wcr.pd,syv.forest.rad,wcr.forest.rad,c(177:238), title="Original")  
+stackflow(syv.smpool,wcr.smpool,syv.forest.rad,wcr.forest.rad,c(177:238), title="Pooled by Species") #Total reversal
+stackflow(syv.dcpool,wcr.dcpool,syv.forest.rad,wcr.forest.rad,c(177:238), title="Pooled by PFT") #About the same
+#stackflow(syv.nd,wcr.nd,syv.forest.rad,wcr.forest.rad,c(177:238), title ="Single rate") #Bigger difference
 #stackflow(syv.swpool,wcr.swpool,syv.forest.rad,wcr.forest.rad,c(177:238)) #Bigger difference
 
 
