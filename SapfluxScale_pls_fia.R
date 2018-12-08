@@ -171,6 +171,7 @@ pls.transp.tot<-cbind(georef,rowSums(pls.transp[3:31], na.rm=TRUE))
 library(maps)
 library(raster)
 library(RColorBrewer)
+library(zoo)
 
 breakset.abs<-c(0,2e8,4e8,6e8,8e8,1e9,1.2e9)
 breakset.diff<-c(-1.2e9,-8e8,-4e8,-2e8,2e8,4e8,8e8,1.2e9)
@@ -203,10 +204,10 @@ plotnice(fia.transp.tot/(24*64*10), breakset.abs/(24*64*10),title='Modern')
 #Current plots (pre-1/16) don't have the 10 and are in dL / km2h
 #Plots now in L/km2h
 
-diff.transp<-cbind(georef,fia.transp$transp-pls.transp$transp)
+#diff.transp<-cbind(georef,fia.transp$transp-pls.transp$transp)
 diff.transp.pr<-cbind(georef,fia.transp.tot[,3]-pls.transp.tot[,3])
 
-plotnice(diff.transp/(24*64*10),breakset.diff/(24*64*10), colset="RdYlGn", title='Difference (Modern-Historic)')
+#plotnice(diff.transp/(24*64*10),breakset.diff/(24*64*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 plotnice(diff.transp.pr/(24*64*10),breakset.diff/(24*64*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 
 colnames(diff.transp.pr)[3]<-"tdiff"
@@ -321,6 +322,9 @@ summ.flux<-function(source,tree,sapcol){
   }
   colnames(sapsum)<-as.character(unique(tree$SPP))
   sapsum$UK<-rowMeans(sapsum)
+  
+  sapsum<-na.approx(sapsum) #Fills missing april data at SYV
+  
   return(sapsum)
 }
 
@@ -361,6 +365,8 @@ lut$FLUX<-round(lut$FLUX*scalarvec[i], digits=7) #All growing season numbers, sc
 lut$FLUX[match(colnames(trmonth), fluxrates.lut$SPP)]<-round(as.numeric(trmonth[i,]), digits=7) #Add in measured numbers
 lut$FLUX[12]<-mean(lut$FLUX[c(1:4,7:9,11)]);lut$FLUX[13]<-mean(lut$FLUX[c(5:6,10)]) #Average for hardwoods, softwoods
 
+lut$FLUX[is.na(lut$FLUX)]<-round(fluxrates.lut$FLUX*scalarvec[i], digits=7)[is.na(lut$FLUX)]
+
 fia.mo<-transp.calc(fia.swa/10000, fia.dens, lut) # The  /10000 converts sapwood area in cm2 to m2.
 pls.mo<-transp.calc(pls.swa/10000, pls.dens, lut) # When m/s of sap flow is multiplied by m2 sapwood area, the output is m3/s. There's also a s>day conversion in original function so,
 #Output is in m3/day for the whole grid cell.
@@ -376,7 +382,7 @@ plotnice(plotguy.fia, breakset=breakset.abs*8e-4,title='Modern')
 #COOL
 }
 par(mfrow=c(1,1))
-transpdiff<-(fia.month.transp-pls.month.transp)  #Converts m3/day to m3/s, then m3 per second to L/s, then divides by grid cell size (640000000 m2 per 8km2) 
+transpdiff<-(fia.month.transp-pls.month.transp) 
 
 convfactor<-1000/(86400*64000000) #start: m3/day 8km ; 1000 L/m3, 86400 seconds/day ; 64000000 m2/8km grid cell
 transpdiff.unit<-transpdiff*convfactor
@@ -428,28 +434,28 @@ for(i in 1:nrow(transp.dcify)){
 }
 
 #A map
-par(mfrow=c(1,1))
+par(mfrow=c(1,1), mar=c(1,1,1,1))
 
 
 background<-rasterFromXYZ(cbind(pls.comp.raw[1:2], rowSums(pls.comp.raw[4:32])))
-plot(background, col='black', legend=FALSE, main='Transpiration Change')
+plot(background, col='black', legend=FALSE, main='Transpiration Change',box=FALSE, axes=FALSE)
 
 default<-rasterFromXYZ(pls.transp.tot)
 rasterFromXYZ(cbind(pls.comp.raw[1:2], rowSums(pls.comp.raw[,4:32])))
 #plot(default, add=TRUE, col='black')
 
 breaknum=11
-col<-colorRampPalette(c('red','light gray', 'blue'))
-breaks<-seq(from=-4e-4, to=4e-4, length.out=breaknum)
+col<-colorRampPalette(c('dark red','red','light steel blue', 'blue','dark blue'))
+breaks<-seq(from=-0.5, to=0.5, length.out=breaknum)
 
-transprast<-rasterFromXYZ(cbind(georef,transp.dcify.plot[,7]))
+transprast<-rasterFromXYZ(cbind(georef,rowMeans(transp.dcify.plot*3600, na.rm=TRUE)))
 plot(transprast, add=TRUE, breaks=breaks, col=col(breaknum))
+
+dev.copy(png, filename='/Users/bethanyblakely/Desktop/Analysis/Albedo/Figures/Maps/TranspChangeMap.png', width=500, height=410); dev.off()
+
 
 #mask<-default
 #mask[transitions]<-NA
 #plot(mask, add=T, col='black')
 
-
-
-
-
+plot(colMeans(transpdiff.unit[transitions,]), type='l')
