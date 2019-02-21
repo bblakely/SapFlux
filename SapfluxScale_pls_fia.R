@@ -7,9 +7,9 @@ fia.comp.raw<-fia.comp
 fia.dens.raw<-fia.dens
 fia.diam.raw<-fia.diam
 
-rm(list=setdiff(ls(), c('fia.comp.raw','fia.dens.raw','fia.diam.raw')))
+rm(list=setdiff(ls(), c('fia.comp.raw','fia.dens.raw','fia.diam.raw', 'wcr.master')))
 
-if(!exists('wcr.master')){source('Prepare_Data.R')} #Read in and process tower and site data, Script takes a few min.
+if(!exists('wcr.master')){source('Prepare_Data.R');source('Refine_TowerData.R')} #Read in and process tower and site data, Script takes a few min.
 
 #Read in paleo data
 pls.comp.raw<-read.csv('plss_composition_alb_v0.9-10.csv')
@@ -100,7 +100,7 @@ swa.calc<-function(comp,diam,dens){
   
   #Multiply out across all stems to get total sapwood area
   dens.stem<-dens.dat*6400  #assumes PLS is in stems per hectare (check!)
-  swa.tot<-swa.eachtree*dens.stem*0.75 #I think the .75 is for radial profile
+  swa.tot<-swa.eachtree*dens.stem*0.73 #I think the .75 is for radial profile
   
   #clip extreme value for plotting
   ext<-quantile(swa.tot,0.999, na.rm=TRUE)
@@ -164,8 +164,8 @@ transp.calc<-function(swa, dens, fluxdf=fluxrates.lut){  #swa: sapwood calculate
 fia.transp<-transp.calc(fia.swa,fia.dens)
 pls.transp<-transp.calc(pls.swa,pls.dens)
 
-fia.transp.tot<-cbind(georef,rowSums(fia.transp[3:31], na.rm=TRUE));
-pls.transp.tot<-cbind(georef,rowSums(pls.transp[3:31], na.rm=TRUE))
+fia.transp.tot<-cbind(georef,rowSums(fia.transp[3:31], na.rm=TRUE)); colnames(fia.transp.tot)[3]<-"Transpiration"
+pls.transp.tot<-cbind(georef,rowSums(pls.transp[3:31], na.rm=TRUE)); colnames(pls.transp.tot)[3]<-"Transpiration"
 
 ####plotting####
 library(maps)
@@ -203,6 +203,12 @@ plotnice(fia.transp.tot/(24*64*10), breakset.abs/(24*64*10),title='Modern')
 # s *10000 |   m3   -> s * 10
 #Current plots (pre-1/16) don't have the 10 and are in dL / km2h
 #Plots now in L/km2h
+
+fia.transp.write<-fia.transp.tot$Transpiration/(24*6400*10);pls.transp.write<-pls.transp.tot$Transpiration/(24*6400*10)
+fia.transp.wrfile<-fia.transp.tot; fia.transp.wrfile$Transpiration<-fia.transp.write
+pls.transp.wrfile<-pls.transp.tot; pls.transp.wrfile$Transpiration<-pls.transp.write
+
+write.csv(fia.transp.wrfile, "Modern_transpiration.csv");write.csv(pls.transp.wrfile, "Historical_transpiration.csv")
 
 #diff.transp<-cbind(georef,fia.transp$transp-pls.transp$transp)
 diff.transp.pr<-cbind(georef,fia.transp.tot[,3]-pls.transp.tot[,3])
