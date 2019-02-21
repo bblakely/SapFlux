@@ -599,7 +599,8 @@ difftwr<-wcr.twr-syv.twr
 diffsap<-rowSums(wcr.mega)-rowSums(syv.mega)
 td<-wcr.master$TD-syv.master$TD;td[td>8]<-NA
 tsd<-wcr.temp-syv.temp
-
+tsd.month<-aggregate(tsd, by=list(wcr.master$MONTH), FUN='mean', na.rm=TRUE)
+saveRDS(tsd.month, file="/Users/bethanyblakely/Desktop/Analysis/MIP/TwrST")
 wcr.master$sap<-rowSums(wcr.mega);syv.master$sap<-rowSums(syv.mega)
 
 eb.interest<-c(10:11,15:16,18:20,24:25,27:30)
@@ -677,6 +678,9 @@ AIC(lm(daydf$daytd~daydf$H_1+daydf$LE_1+daydf$USTAR_1+daydf$NETRAD_1+daydf$daysa
 albdiff<-wcr.alb-syv.alb;albdiff[abs(albdiff)>1]<-NA
 
 albdiff.doy<-aggregate(albdiff, by=list(wcr.master$DOY), FUN='mean', na.rm=TRUE)$x
+albdiff.month<-aggregate(albdiff, by=list(wcr.master$MONTH), FUN='mean', na.rm=TRUE)$x
+saveRDS(albdiff.month, file="/Users/bethanyblakely/Desktop/Analysis/MIP/TwrAlb.rds")
+
 albdiff.sm<-rollapply(albdiff.doy, width=7,FUN='mean')
 
 plot(albdiff.sm, type='l', lwd=3, ylim=c(-0.05,0.15), col='forest green', 
