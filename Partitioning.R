@@ -1,19 +1,28 @@
 #Call data prep
+if (!exists(syv.twr.bku)){
 source('Prepare_Data.R')
 source('Refine_TowerData.R')
 source('Calc_Sapflow_Full.R')
+syv.twr.bku<-syv.twr; wcr.twr.bku<-wcr.twr
+}
 
+syv.twr<-syv.twr.bku;wcr.twr<-wcr.twr.bku
+cutoff<-50
 
 #surface temperatures
 syv.temp<-rowMeans(syv.master[7:10])
-wcr.temp<-Lag(rowMeans(wcr.master[7:9]),-2)
+wcr.temp<-Lag(rowMeans(wcr.master[7:9]),-2) #logger off by an hour
 
-syv.temp.copy<-syv.temp; wcr.temp.copy<-wcr.temp
-syv.temp<-syv.temp+273.15; wcr.temp<-wcr.temp+273.15
+syv.temp.copy<-syv.temp; wcr.temp.copy<-wcr.temp #backups
+syv.temp<-syv.temp+273.15; wcr.temp<-wcr.temp+273.15 #Convert to K
 
-syv.twr.copy<-syv.twr;wcr.twr.copy<-wcr.twr
+syv.twr.copy<-syv.twr;wcr.twr.copy<-wcr.twr 
 syv.twr$TA_1<-syv.twr$TA_1+273.15;wcr.twr$TA_1<-wcr.twr$TA_1+273.15
 
+syv.td<-syv.temp-syv.twr$TA_1;wcr.td<-wcr.temp-wcr.twr$TA_1
+
+syv.temp.twr<-(syv.twr$LW_OUT/((5.67e-8)*0.987))^(1/4);wcr.temp.twr<-(wcr.twr$LW_OUT/((5.67e-8)*0.983))^(1/4)
+syv.td.twr<-syv.temp.twr-syv.twr$TA_1;wcr.td.twr<-wcr.temp.twr-wcr.twr$TA_1
 #Juang temp partitioning
 
 #Are the assumptions of the same SW, temp fulfilled?
@@ -27,11 +36,9 @@ sum(abs(syv.twr$SW_IN[gsind]-wcr.twr$SW_IN[gsind]), na.rm=TRUE)/length(which(!is
 sum(abs(syv.twr$SW_IN[daygs]-wcr.twr$SW_IN[daygs]), na.rm=TRUE)/length(which(!is.na(syv.twr$SW_IN[daygs]-wcr.twr$SW_IN[daygs])))
 #yikes I think we have to subset
 
-cutoff<-50 #Greatest tolerable difference in SWin, arbitrary for now
-
 sim<-which(abs(syv.twr$SW_IN-wcr.twr$SW_IN)<cutoff) 
 sum(abs(syv.twr$SW_IN[sim]-wcr.twr$SW_IN[sim]), na.rm=TRUE)/length(which(!is.na(syv.twr$SW_IN[sim]-wcr.twr$SW_IN[sim])))# MAE of remaining values remaining
-1-(length(sim)/nrow(syv.twr)) #Data loss
+dl<-1-(length(sim)/nrow(syv.twr)) #Data loss
 
 off<-which(abs(syv.twr$SW_IN-wcr.twr$SW_IN)>cutoff)
 syv.twr$SW_IN[off]<-NA; wcr.twr$SW_IN[off]<-NA
@@ -112,19 +119,19 @@ term3<-0
 term4<-sb*syv.temp^4*de
 
 
-par(mfrow=c(1,3))
-plot(pct.clip(scalar.a*term1a), main="term 1, nu1")
-plot(pct.clip(scalar.b*term1b), main="term 1, nu2")
-plot(pct.clip(scalar.c*term1c), main="term 1, nu3")
+#par(mfrow=c(1,3))
+#plot(pct.clip(scalar.a*term1a), main="term 1, nu1")
+#plot(pct.clip(scalar.b*term1b), main="term 1, nu2")
+#plot(pct.clip(scalar.c*term1c), main="term 1, nu3")
 
 term1<-(-1)*(scalar.a*term1a+scalar.b*term1b+scalar.c*term1c)/3
 term2<-(-1)*(scalar.a*term2+scalar.b*term2+scalar.c*term2)/3
 term4<-(-1)*(scalar.a*term4+scalar.b*term4+scalar.c*term4)/3
 
-plot(pct.clip(term1), main='turbulent'); mean(pct.clip(term1), na.rm=TRUE)
+#plot(pct.clip(term1), main='turbulent'); mean(pct.clip(term1), na.rm=TRUE)
 #hist(pct.clip(scalar.a*term1a+scalar.b*term1b+scalar.c*term1c)/3)
-plot(pct.clip(term2), main='albedo'); mean(pct.clip(term2), na.rm=TRUE)
-plot(pct.clip(term4), main='emissivity'); mean(pct.clip(term4), na.rm=TRUE)
+#plot(pct.clip(term2), main='albedo'); mean(pct.clip(term2), na.rm=TRUE)
+#plot(pct.clip(term4), main='emissivity'); mean(pct.clip(term4), na.rm=TRUE)
 
 #Put it alll together
 DT<-(term1-term2-term4); mean(pct.clip(DT), na.rm=TRUE)
@@ -133,18 +140,22 @@ mean(pct.clip(DT)[daygs], na.rm=TRUE)
 
 
 par(mfrow=c(1,2))
-col=c('blue','yellow','red', 'black')
+col=c('blue','yellow','red', 'black', 'gray', 'gray')
 
 all<-term1-term2-term4
 t1all<-mean(pct.clip(term1), na.rm=TRUE)
 t2all<-mean(pct.clip(term2), na.rm=TRUE)
 t4all<-mean(pct.clip(term4), na.rm=TRUE)
 predall<-t1all-t2all-t4all
-barplot(c(t1all,-t2all,-t4all, predall), main='all',ylim=c(-0.3,0.1), names.arg=c('turbulent','albedo','emissivity', 'predicted DT'), col=col)
-abline(h=0);abline(v=3.7)
+#barplot(c(t1all,-t2all,-t4all, predall), main='all',ylim=c(-0.3,0.1), names.arg=c('turbulent','albedo','emissivity', 'predicted DT'), col=col)
+#abline(h=0);abline(v=3.7)
 
-obsall<-mean(wcr.temp[which(!is.na(all))]-syv.temp[which(!is.na(all))], na.rm=TRUE)
-obsall.td<-mean(wcr.td[which(!is.na(all))]-syv.td[which(!is.na(all))], na.rm=TRUE)
+obsall<-mean(wcr.temp[which(!is.na(all))]-syv.temp[which(!is.na(all))], na.rm=TRUE);obsall
+obsall.twr<-mean(wcr.temp.twr[which(!is.na(all))]-syv.temp.twr[which(!is.na(all))], na.rm=TRUE);obsall.twr
+
+obsall.td<-mean(wcr.td[which(!is.na(all))]-syv.td[which(!is.na(all))], na.rm=TRUE);obsall.td
+obsall.twr.td<-mean(wcr.td.twr[which(!is.na(all))]-syv.td.twr[which(!is.na(all))], na.rm=TRUE);obsall.twr.td
+
 
 t1day<-mean(pct.clip(term1[dayind]), na.rm=TRUE)
 t2day<--mean(pct.clip(term2)[dayind], na.rm=TRUE)
@@ -158,8 +169,20 @@ t1gs<-mean(pct.clip(term1)[daygs], na.rm=TRUE)
 t2gs<-mean(pct.clip(term2)[daygs], na.rm=TRUE)
 t4gs<-mean(pct.clip(term4)[daygs], na.rm=TRUE)
 predgs<- (t1gs-t2gs-t4gs)
-barplot(c(t1gs,-t2gs,-t4gs, predgs),main='growing season days',ylim=c(-0.3,0.1), names.arg=c('turbulent','albedo','emissivity', 'predicted DT'), col=col)
-abline(h=0);abline(v=3.7)
-obsgs<-mean(wcr.temp[which(!is.na(allgs))]-syv.temp[which(!is.na(allgs))], na.rm=TRUE)
-obsgs.td<-mean(wcr.td[which(!is.na(allgs))]-syv.td[which(!is.na(allgs))], na.rm=TRUE)
+#barplot(c(t1gs,-t2gs,-t4gs, predgs),main='growing season days',ylim=c(-0.3,0.1), names.arg=c('turbulent','albedo','emissivity', 'predicted DT'), col=col)
+#abline(h=0);abline(v=3.7)
 
+obsgs<-mean(wcr.temp[which(!is.na(allgs))]-syv.temp[which(!is.na(allgs))], na.rm=TRUE);obsgs
+obsgs.twr<-mean(wcr.temp.twr[which(!is.na(allgs))]-syv.temp.twr[which(!is.na(allgs))], na.rm=TRUE);obsgs.twr
+
+obsgs.td<-mean(wcr.td[which(!is.na(allgs))]-syv.td[which(!is.na(allgs))], na.rm=TRUE);obsgs.td
+obsgs.twr.td<-mean(wcr.td.twr[which(!is.na(allgs))]-syv.td.twr[which(!is.na(allgs))], na.rm=TRUE);obsgs.twr.td
+
+
+barplot(c(t1all,-t2all,-t4all, predall, obsall, obsall.twr), main='all',ylim=c(-0.7,1.2), names.arg=c('turbulent','albedo','emissivity', 'predicted DT', 'obs. apogee','obs. towerLW'), col=col)
+abline(h=0);abline(v=3.7)
+
+barplot(c(t1gs,-t2gs,-t4gs, predgs, obsgs, obsgs.twr),main='growing season days',ylim=c(-0.7,1.2), names.arg=c('turbulent','albedo','emissivity', 'predicted DT', 'obs. apogee','obs. towerLW'), col=col)
+abline(h=0);abline(v=3.7)
+
+dl
