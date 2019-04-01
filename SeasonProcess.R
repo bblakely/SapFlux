@@ -46,7 +46,7 @@ wcr.flow.pd<-cbind(wcr.ts,Flow.pd)
 
 rm('treemult.wcr','Flow','Flow.pd')
 
-##Now for some analysis
+###Now for some analysis####
 
 par(mfrow=c(1,2))
 
@@ -265,10 +265,27 @@ for(i in 1:5){
 }
 
 #overall...
-par(mfrow=c(2,1), mar=c(4,4.2,4,2))
-plot(colMeans(wcr.flow.pd[5:18], na.rm=TRUE)~wcr.tree$DBH, col=col.class.wcr, pch=pch.class.wcr, ylim=c(0,1000), xlim=c(5,90))
+treeday.wcr<-aggregate(wcr.flow.pd[,5:ncol(wcr.flow.pd)], by=list(wcr.flow.pd$DOY), FUN=sum)/1000 #Now in L/day
+gs<-c(150:250)
+
+par(mfrow=c(1,2), mar=c(4,4.5,4,1)); ylab=expression(bold("Transpiration"~(L~day^-1)))
+plot(colMeans(treeday.wcr[gs,2:ncol(treeday.wcr)], na.rm=TRUE)~wcr.tree$DBH, col=col.class.wcr, pch=pch.class.wcr, ylim=c(0,150), xlim=c(0,90), cex=2, xlab='DBH', ylab=ylab, 
+     main='SF', font=2,font.lab=2, cex.lab=1.2, cex.main=1.5)
+
+# legend(-3,1000,legend=c('Sugar Maple','Basswood','Green Ash','Hophornbeam'), 
+#        fill=c('orange','yellow','yellow green','dark red'), cex=0.9,
+#         x.intersp=0.8,y.intersp=0.6, bty='n', text.font=2)
 #abline(a=-20,b=5)
-plot(colMeans(syv.flow.pd[5:24], na.rm=TRUE)~syv.tree$DBH, col=col.class.syv, pch=pch.class.syv, ylim=c(0,1000), xlim=c(5,90))
+
+treeday.syv<-aggregate(syv.flow.pd[,5:ncol(syv.flow.pd)], by=list(syv.flow.pd$DOY), FUN=sum)/1000 #Now in L/day
+gs<-c(150:250)
+
+plot(colMeans(treeday.syv[gs,2:ncol(treeday.syv)], na.rm=TRUE)~syv.tree$DBH, col=col.class.syv, pch=pch.class.syv, ylim=c(0,150), xlim=c(0,90), cex=2, xlab='DBH', ylab="",
+     main='OF', font=2,font.lab=2, cex.lab=1.2, cex.main=1.5)
+
+# legend(-3,1000,legend=c('Sugar Maple','Yellow Birch','Eastern Hemlock','Hophornbeam'), 
+#        fill=c('orange','blue','forest green','dark red'), cex=0.9,
+#        x.intersp=0.8,y.intersp=0.6, bty='n', text.font=2)
 #abline(a=-20,b=5)
 
 #Without letters
@@ -281,7 +298,7 @@ legend(2,1200,legend=c('Sugar Maple','Basswood','Green Ash','Hophornbeam'),
 #30 min in g - correct units
 
 #abline(a=-20,b=5)
-plot(colMeans(syv.flow.pd[5:24], na.rm=TRUE)~syv.tree$DBH, col=col.class.syv, pch='*', ylim=c(0,1000), xlim=c(5,90), cex=3.5, xlab='DBH', ylab="Avg. Daily Flow (L)", 
+plot(colMeans(syv.flow.pd[5:24], na.rm=TRUE)~syv.tree$DBH, col=col.class.syv, pch='*', ylim=c(0,1000), xlim=c(5,90), cex=3.5, xlab='DBH', ylab="",
      main='Old Growth', font=2,font.lab=2, cex.lab=1.2, cex.main=1.5)
 legend(2,1200,legend=c('Sugar Maple','Yellow Birch','Eastern Hemlock','Hophornbeam'), 
        col=c('orange','blue','forest green','dark red'), cex=0.9,
@@ -446,19 +463,22 @@ syv.hl.pct<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='tsca'])/syv.t
 syv.sm.pct<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='acsa'])/syv.totals, 14, FUN='mean', na.rm=TRUE)
 syv.hb.pct<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='osvi'])/syv.totals, 14, FUN='mean', na.rm=TRUE)
 syv.yb.pct<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='beal'])/syv.totals, 14, FUN='mean', na.rm=TRUE)
+syv.uk.pct<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='uk'])/syv.totals, 14, FUN='mean', na.rm=TRUE)
 
-pcts<-data.frame(cbind(syv.hl.pct,syv.sm.pct,syv.hb.pct,syv.yb.pct))
+pcts<-data.frame(cbind(syv.hl.pct,syv.sm.pct,syv.hb.pct,syv.yb.pct, syv.uk.pct))
 
 syv.sm.pct[is.na(syv.sm.pct)]<-0
 syv.yb.pct[is.na(syv.yb.pct)]<-0
 syv.hb.pct[is.na(syv.hb.pct)]<-0
 syv.hl.pct[is.na(syv.hl.pct)]<-0
+syv.uk.pct[is.na(syv.uk.pct)]<-0
 
 #gs<-c(125:304)
-gs<-c(10:350)
+gs<-c(150:250)
 #now with prct?
 plot(syv.sm.pct[gs], col='white', ylim=c(0,1), xlim=c(min(gs), max(gs)), main='SYV', ylab="% sap flow contributed", xlab="DOY", font=2,font.lab=2)
 polygon(y=c(0,1,1,0),x=c(min(gs),min(gs),max(gs),max(gs)), col='gray')
+polygon(y=c(syv.sm.pct[gs]+syv.hl.pct[gs]+syv.yb.pct[gs]+syv.hb.pct[gs]+syv.uk.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='gray')
 polygon(y=c(syv.sm.pct[gs]+syv.hl.pct[gs]+syv.yb.pct[gs]+syv.hb.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='dark red')
 polygon(y=c(syv.sm.pct[gs]+syv.hl.pct[gs]+syv.yb.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='blue')
 polygon(y=c(syv.sm.pct[gs]+syv.hl.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='forest green')
@@ -482,8 +502,9 @@ syv.hl.tot<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='tsca']), 14, 
 syv.sm.tot<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='acsa']), 14, FUN='mean', na.rm=TRUE)
 syv.hb.tot<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='osvi']), 14, FUN='mean', na.rm=TRUE)
 syv.yb.tot<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='beal']), 14, FUN='mean', na.rm=TRUE)
+syv.uk.tot<-rollapply(rowSums(alltree.syv.pd[,syv.forest.rad$SPP=='uk']), 14, FUN='mean', na.rm=TRUE)
 
-tots<-data.frame(cbind(syv.hl.tot,syv.sm.tot,syv.hb.tot,syv.yb.tot))
+tots<-data.frame(cbind(syv.hl.tot,syv.sm.tot,syv.hb.tot,syv.yb.tot, syv,uk.tot))
 
 # plot(syv.sm.tot[gs], ylim=c(0,5000), col='orange',type='l', main='stackline')
 # lines(syv.hl.tot[gs]+syv.sm.tot[gs], col='forest green')
@@ -494,8 +515,10 @@ syv.sm.tot[is.na(syv.sm.tot)]<-0
 syv.hl.tot[is.na(syv.hl.tot)]<-0
 syv.yb.tot[is.na(syv.yb.tot)]<-0
 syv.hb.tot[is.na(syv.hb.tot)]<-0
+syv.uk.tot[is.na(syv.uk.tot)]<-0
 
-plot(syv.sm.tot[gs], col='white', ylim=c(0,6000), xlim=c(min(gs),max(gs)), main='SYV', ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+plot(syv.sm.tot[gs], col='white', ylim=c(0,6300), xlim=c(min(gs),max(gs)), main='SYV', ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs]+syv.hb.tot[gs]+syv.uk.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='gray')
 polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs]+syv.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='dark red')
 polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs]+syv.yb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='blue')
 polygon(y=c(syv.sm.tot[gs]+syv.hl.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='forest green')
@@ -505,24 +528,28 @@ polygon(x=c(156,156,177,177),y=c(0,5000,5000,0), col='white', border=NA)
 polygon(x=c(75,75,110,110),y=c(0,5000,5000,0), col='white', border=NA)
 
 
+
 #WCR
 wcr.totals<-rowSums(alltree.wcr.pd)
 wcr.ab.pct<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='tiam'])/wcr.totals, 14, FUN='mean', na.rm=TRUE)
 wcr.sm.pct<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='acsa'])/wcr.totals, 14, FUN='mean', na.rm=TRUE)
 wcr.hb.pct<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='osvi'])/wcr.totals, 14, FUN='mean', na.rm=TRUE)
 wcr.ga.pct<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='frpe'])/wcr.totals, 14, FUN='mean', na.rm=TRUE)
+wcr.uk.pct<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='uk'])/wcr.totals, 14, FUN='mean', na.rm=TRUE)
 
-pcts<-data.frame(cbind(wcr.ab.pct,wcr.sm.pct,wcr.hb.pct,wcr.ga.pct))
+pcts<-data.frame(cbind(wcr.ab.pct,wcr.sm.pct,wcr.hb.pct,wcr.ga.pct, wcr.uk.pct))
 
 wcr.sm.pct[is.na(wcr.sm.pct)]<-0
 wcr.ga.pct[is.na(wcr.ga.pct)]<-0
 wcr.hb.pct[is.na(wcr.hb.pct)]<-0
 wcr.ab.pct[is.na(wcr.ab.pct)]<-0
+wcr.uk.pct[is.na(wcr.uk.pct)]<-0
 
-gs<-c(125:304)
+gs<-c(125:275)
 
 plot(wcr.sm.pct[gs], col='white', ylim=c(0,1), xlim=c(min(gs), max(gs)), main='WCR', ylab="% sap flow", xlab="DOY", font=2,font.lab=2, cex.lab=1.2)
 polygon(y=c(0,1,1,0),x=c(min(gs),min(gs),max(gs),max(gs)), col='gray')
+#polygon(y=c(wcr.sm.pct[gs]+wcr.ab.pct[gs]+wcr.ga.pct[gs]+wcr.hb.pct[gs]+wcr.uk.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='gray')
 polygon(y=c(wcr.sm.pct[gs]+wcr.ab.pct[gs]+wcr.ga.pct[gs]+wcr.hb.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='dark red')
 polygon(y=c(wcr.sm.pct[gs]+wcr.ab.pct[gs]+wcr.ga.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='yellow green')
 polygon(y=c(wcr.sm.pct[gs]+wcr.ab.pct[gs], rep(0,length(gs))),x=c(gs,rev(gs)),col='yellow')
@@ -536,6 +563,7 @@ wcr.ab.tot<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='tiam']), 14, 
 wcr.sm.tot<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='acsa']), 14, FUN='mean', na.rm=TRUE)
 wcr.hb.tot<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='osvi']), 14, FUN='mean', na.rm=TRUE)
 wcr.ga.tot<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='frpe']), 14, FUN='mean', na.rm=TRUE)
+wcr.uk.tot<-rollapply(rowSums(alltree.wcr.pd[,wcr.forest.rad$SPP=='uk']), 14, FUN='mean', na.rm=TRUE)
 
 tots<-data.frame(cbind(wcr.ab.tot,wcr.sm.tot,wcr.hb.tot,wcr.ga.tot))
 
@@ -543,16 +571,18 @@ wcr.sm.tot[is.na(wcr.sm.tot)]<-0
 wcr.ab.tot[is.na(wcr.ab.tot)]<-0
 wcr.ga.tot[is.na(wcr.ga.tot)]<-0
 wcr.hb.tot[is.na(wcr.hb.tot)]<-0
+wcr.uk.tot[is.na(wcr.uk.tot)]<-0
 
-plot(wcr.sm.tot[gs], col='white', ylim=c(0,6000), xlim=c(min(gs),max(gs)),main='WCR', ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+plot(wcr.sm.tot[gs], col='white', ylim=c(0,6300), xlim=c(min(gs),max(gs)),main='WCR', ylab="Sap flow (L day-1)", xlab='DOY', font=2, font.lab=2)
+polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs]+wcr.hb.tot[gs]+wcr.uk.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='gray')
 polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs]+wcr.hb.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='dark red')
 polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs]+wcr.ga.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='yellow green')
 polygon(y=c(wcr.sm.tot[gs]+wcr.ab.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)),col='yellow')
 polygon(y=c(wcr.sm.tot[gs],rep(0,length(gs))),x=c(gs,rev(gs)), col='orange')
 #mask out weird smoothing
-polygon(y=c(0,6000,6000,0), x=c(247,247,252,252), col='white',border=NA)
-polygon(y=c(0,6000,6000,0), x=c(39,39,46,46), col='white',border=NA)
-polygon(y=c(0,6000,6000,0), x=c(330,330,365,365), col='white',border=NA)
+polygon(y=c(0,6300,6300,0), x=c(247,247,252,252), col='white',border=NA)
+polygon(y=c(0,6300,6300,0), x=c(39,39,46,46), col='white',border=NA)
+polygon(y=c(0,6300,6300,0), x=c(330,330,365,365), col='white',border=NA)
 
 #Universal legend
 plot(c(1:10),c(1:10), col='white')
@@ -627,7 +657,7 @@ wcr.perba<-cbind(wcr.acsanorm,wcr.tiamnorm,wcr.osvinorm,wcr.frpenorm)
 
 plot(wcr.perba[,1], col='white', type='l', ylim=c(0,5.0), xlim=c(min(gs),max(gs)), main='WCR sapflow per basal area', 
      xlab='DOY', ylab=" % Sapflow / % BA", font=2, font.lab=2, cex.lab=1.2)
-cols<-c('orange','yellow','dark red','yellow green')
+cols.wcr<-cols<-c('orange','yellow','dark red','yellow green')
 for(i in 1:4){
   lines(wcr.perba[,i], col=cols[i], lwd=5)
 }
@@ -657,15 +687,21 @@ syv.bealnorm<-syv.yb.pct/syv.ba.norm[4]
 syv.perba<-cbind(syv.acsanorm,syv.tscanorm,syv.osvinorm,syv.bealnorm)
 
 
-plot(syv.perba[,1], col='white', type='l', ylim=c(0,5.0), xlim=c(min(gs),max(gs)), main='SYV sapflow per basal area', 
+plot(syv.perba[,1], col='white', type='l', ylim=c(0,3), xlim=c(min(gs),max(gs)), main='SYV sapflow per basal area', 
      xlab='DOY', ylab=" %sapflow / % BA", font=2, font.lab=2, cex.lab=1.2)
-cols<-c('orange','forest green','dark red','blue')
+cols.syv<-cols<-c('orange','forest green','dark red','blue')
 for(i in 1:4){
   lines(syv.perba[,i], col=cols[i], lwd=5)
 }
 abline(h=1, lty=2)
 polygon(x=c(155,155,177, 177),y=c(-0.2,5,5,-0.2), col='white', border=NA)
 #legend(x=155,y=4.6,legend=c("ACSA","OSVI","TSCA","BEAL"), col=c('orange','dark red','forest green','blue'), ncol=2, lwd=3, cex=0.8)
+
+
+#Simplified
+par(mfrow=c(1,2))
+plot(colMeans(syv.perba[gs,]), col=cols.syv, pch=18, cex=3, ylim=c(0,2),xlim=c(0.5,4.5), xlab='', ylab=" % T / % BA"); abline(h=1, lty=3)
+plot(colMeans(wcr.perba[gs,]), col=cols.wcr, pch=18, cex=3, ylim=c(0,2),xlim=c(0.5,4.5), xlab='', ylab=" % T / % BA"); abline(h=1, lty=3)
 
 
 #Big trees
@@ -882,22 +918,22 @@ stackflow(syv.dcpool,wcr.dcpool,syv.forest.rad,wcr.forest.rad,c(177:238), title=
 #stackflow(syv.nd,wcr.nd,syv.forest.rad,wcr.forest.rad,c(177:238), title ="Single rate") #Bigger difference
 #stackflow(syv.swpool,wcr.swpool,syv.forest.rad,wcr.forest.rad,c(177:238)) #Bigger difference
 
-
-#Do these in parallel?
-
-#Basal area
-wcr.basal<-aggregate(wcr.forest.rad$BA, by=list(wcr.forest.rad$SPP), FUN=sum)
-syv.basal<-aggregate(syv.forest.rad$BA, by=list(syv.forest.rad$SPP), FUN=sum)
-
-sites.ba<-merge(x=syv.basal,y=wcr.basal, by='Group.1', all=TRUE)
-sites.ba<-sites.ba[,2:3]
-sites.ba[is.na(sites.ba)]<-0
-
-sites.ba<-rbind(sites.ba[1:4,],sites.ba[6:8,],sites.ba[5,])
-
-
-barplot(as.matrix(sites.ba), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
-        main='Basal area',names.arg=c('SYV','WCR'),ylab='Total Basal area (cm2)', ylim=c(0,200000), 
-        cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2)
-#Seasonality
+# 
+# #Do these in parallel?
+# 
+# #Basal area
+# wcr.basal<-aggregate(wcr.forest.rad$BA, by=list(wcr.forest.rad$SPP), FUN=sum)
+# syv.basal<-aggregate(syv.forest.rad$BA, by=list(syv.forest.rad$SPP), FUN=sum)
+# 
+# sites.ba<-merge(x=syv.basal,y=wcr.basal, by='Group.1', all=TRUE)
+# sites.ba<-sites.ba[,2:3]
+# sites.ba[is.na(sites.ba)]<-0
+# 
+# sites.ba<-rbind(sites.ba[1:4,],sites.ba[6:8,],sites.ba[5,])
+# 
+# 
+# barplot(as.matrix(sites.ba), col=c('orange','blue','dark red', 'forest green','darkolivegreen3','navajowhite4','yellow', 'gray'),
+#         main='Basal area',names.arg=c('SYV','WCR'),ylab='Total Basal area (cm2)', ylim=c(0,200000), 
+#         cex.axis=2, cex.lab=2,cex.main=2.5, cex.names=2, font.axis=2,font.lab=2,font.main=2)
+# #Seasonality
 

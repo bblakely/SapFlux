@@ -330,18 +330,25 @@ lines(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE))
 
 
 #by species
-plot(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE), main='TIAM', ylim=c(0,1))
+par(mfrow=c(3,2), mar=c(4,5,2,0.3));ylab<-expression("Relative"~J[s])
+
+plot(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE), main='TIAM', ylim=c(0,1.2), ylab=ylab, xlab="", xaxt='n')
 lines(colMeans(profile.val[c(2,5), 2:5], na.rm=TRUE))
+axis(side=1, at=c(1,2,3,4), labels=c(10,30,50,70))
 
-plot(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE), main='POTR', ylim=c(0,1))
+plot(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE), main='POTR', ylim=c(0,1.2), ylab="", xlab="", xaxt='n')
 lines(colMeans(profile.val[c(3:4), 2:5], na.rm=TRUE))
+axis(side=1, at=c(1,2,3,4), labels=c(10,30,50,70))
 
-plot(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE), main='Acer spp.', ylim=c(0,1))
+plot(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE), main='Acer spp.', ylim=c(0,1.2), ylab=ylab, xlab="", xaxt='n')
 lines(colMeans(profile.val[c(6:7), 2:5], na.rm=TRUE))
+axis(side=1, at=c(1,2,3,4), labels=c(10,30,50,70))
 
-plot(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE), main='TSCA', ylim=c(0,1))
+plot(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE), main='TSCA', ylim=c(0,1.2), ylab="", xlab="Depth (mm)", xaxt='n')
 lines(colMeans(profile.val[c(8,11), 2:5], na.rm=TRUE))
+axis(side=1, at=c(1,2,3,4), labels=c(10,30,50,70))
 
-plot(colMeans(profile.val[1, 2:5], na.rm=TRUE), main='OSVI', ylim=c(0,1))
+plot(colMeans(profile.val[1, 2:5], na.rm=TRUE), main='OSVI', ylim=c(0,1.2), ylab=ylab, xlab="Depth (mm)", xaxt='n')
 lines(colMeans(profile.val[1, 2:5], na.rm=TRUE))
+axis(side=1, at=c(1,2,3,4), labels=c(10,30,50,70))
 

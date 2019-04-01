@@ -68,6 +68,7 @@ wp.wcr<-wp.dat[wp.dat$SITE=="WCR",]
 wp.syv<-wp.dat[wp.dat$SITE=="SYV",]
 
 ####Plot for WP####
+par(mfrow=c(1,2))
 wp.wcr$SPP<-as.character(wp.wcr$SPP)
 col.wcr<-rep('black',9); col.wcr[wp.wcr$SPP=='acsa']<-'orange';col.wcr[wp.wcr$SPP=="osvi"]<-'dark red'; col.wcr[wp.wcr$SPP=="tiam"]<-'yellow'
 dat.wcr<-t(wp.wcr[,9:13])
@@ -81,11 +82,13 @@ boxplot(dat.syv, col=col.syv)
 
 
 m.wcr<-dat.wcr[,wp.wcr$SPP=='acsa']; m.syv<-dat.syv[,wp.syv$SPP=='acsa']
-par(mfrow=c(1,2))
-boxplot(m.wcr, ylim=c(0,1.2), col='orange');boxplot(m.syv, ylim=c(0,1.2), col='orange')
+par(mfrow=c(2,1))
+boxplot(m.wcr, ylim=c(0,1.2));boxplot(m.syv, ylim=c(0,1.2))
 #####
 
-colMeans(m.wcr, na.rm=TRUE);colMeans(m.syv, na.rm=TRUE)
+par(mfrow=c(1,1))
+wcr.avg<-colMeans(m.wcr, na.rm=TRUE);syv.avg<-colMeans(m.syv, na.rm=TRUE)
+boxplot(wcr.avg, syv.avg, ylim=c(0,1.2), col='orange')
 
 mean(colMeans(m.wcr, na.rm=TRUE));mean(colMeans(m.syv, na.rm=TRUE))
 
@@ -159,4 +162,16 @@ wcr.cond.map<-wcr.cond[wcr.combo$SPP=='ACSA']
 mean(syv.cond.map, na.rm=TRUE);mean(wcr.cond.map)
 
 barplot(c(mean(syv.cond.map, na.rm=TRUE),mean(wcr.cond.map, na.rm=TRUE)))
+
+
+boxplot(wcr.cond.map, syv.cond.map, ylim=c(0,8))
+
+
+par(mar=c(4,5,4,4))
+ylab=expression(Psi~(Mpa))
+boxplot(-wcr.avg, -syv.avg, ylim=c(-1.2, 0), col='orange', names=c("MF", "OF"), ylab=ylab)
+#boxplot(wcr.cond.map, syv.cond.map, ylim=c(0,8))
+
+
+
         
