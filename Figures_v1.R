@@ -293,7 +293,14 @@ stackflow<-function(syv.flow,wcr.flow,syv.tree, wcr.tree, gs=gs, ylim=8500, errb
   
 }
 par(mar=c(4,5.5,4,2))
+
+par(mfrow=c(1,3))
 stackflow(syv.forest.day,wcr.forest.day,syv.forest.rad,wcr.forest.rad,gs)
+
+#Rogue! Delete probably
+
+barplot(c(mean(wcr.twr$LE_1[daygs], na.rm=TRUE), mean(syv.twr$LE_1[daygs], na.rm=TRUE)), names.arg=c('wcr', 'syv'), main=' LE before')
+barplot(c(mean(wcr.twr$LE_1[daygs]/0.7, na.rm=TRUE), mean(syv.twr$LE_1[daygs], na.rm=TRUE)), names.arg=c('wcr', 'syv'), main='LE after')
 
 #Original
 #source('SeasonProcess.R')

@@ -9,7 +9,7 @@ peakgs<-which(wcr.master$DOY>167& wcr.master$DOY<244 & wcr.master$H%in%dayhr)
 
 wcr.master.day<-aggregate(wcr.master[daygs,], by=list(wcr.master$DOY[daygs]), FUN='mean', na.rm=TRUE)
 syv.master.day<-aggregate(syv.master[daygs,], by=list(syv.master$DOY[daygs]), FUN='mean', na.rm=TRUE)
-
+gs<-c(150:250)
 #wcr.precip<-aggregate(wcr.master.day$P_PI_F, by=list(wcr.master.day$DOY), FUN='sum')
 
 # cols<-rainbow(18)
@@ -112,6 +112,104 @@ for(i in (1+which(syv.tree$SPP=="OSVI"| syv.tree$SPP=="ACSA"))){
   points(syv.master.day[,i+10]~syv.master.day$NETRAD_1, col=alpha(col, transp))
 }
 
+#FITS
+par(mfrow=c(3,3))
+
+
+syv.coefs<-matrix(nrow=length(which(syv.tree$SPP=="ACSA")), ncol=2); count=0
+for (i in which(syv.tree$SPP=="ACSA")){
+
+pair<-data.frame(cbind(syv.master.day[,i+11], syv.master.day$VPD_PI_1)); colnames(pair)<-c("SAP", "VPD")
+print(colnames(syv.master.day)[i+11])
+y<-pair$SAP
+x<-pair$VPD/10
+y1<-y[!is.na(y)&!is.na(x)]
+x1<-x[!is.na(y)&!is.na(x)]
+
+fit<-nls(y1~a*(1-exp(-b*x1)), start=list(a=12, b=0.7))
+
+# testx<-seq(from=0.1, to=2.0, by=0.1)
+# testy<-a*(1-exp(-b*testx))
+# plot(testx, testy)
+
+plot(x1,y1, ylim=c(0,80), main=paste("SYV;", "a =",round(coef(fit)[1],2), "b =",round(coef(fit)[2],2)), ylab="sap flux", xlab="VPD")
+yfit<-predict(fit)
+lines(sort(x1), sort(yfit),col="red", pch="-")
+count=count+1
+syv.coefs[count,]<-(coef(fit))
+}
+
+par(mfrow=c(3,3))
+wcr.coefs<-matrix(nrow=length(which(wcr.tree$SPP=="ACSA")), ncol=2); count=0
+for (i in which(wcr.tree$SPP=="ACSA")){
+  
+  pair<-data.frame(cbind(wcr.master.day[,i+11], wcr.master.day$VPD_PI_1)); colnames(pair)<-c("SAP", "VPD")
+  print(colnames(wcr.master.day)[i+11])
+ 
+   y<-pair$SAP
+  x<-pair$VPD/10
+  y1<-y[!is.na(y)&!is.na(x)]
+  x1<-x[!is.na(y)&!is.na(x)]
+  
+  fit<-nls(y1~a*(1-exp(-b*x1)), start=list(a=40, b=2))
+  
+  # testx<-seq(from=0.1, to=2.0, by=0.1)
+  # testy<-a*(1-exp(-b*testx))
+  # plot(testx, testy)
+  
+  plot(x1,y1, ylim=c(0,80), main=paste("WCR;", "a =", round(coef(fit)[1],2), "b =",round(coef(fit)[2],2)), ylab="sap flux", xlab="VPD")
+  yfit<-predict(fit)
+  lines(sort(x1), sort(yfit),col="red")
+  count=count+1
+  wcr.coefs[count,]<-(coef(fit))
+}
+
+
+
+t.test(wcr.coefs[,1], syv.coefs[,1]); t.test(wcr.coefs[,2], syv.coefs[,2])
+
+
+#Ewers chcks
+#Ewers coefs
+1.45/0.52; 1.4/0.36
+#mine
+mean(wcr.coefs[,1])/mean(syv.coefs[,1])
+
+#Ewers Ec: 3.44mm/day wcr, 1.74 mm/day syv
+#mie:
+syv.rain.day<-aggregate(syv.twr$P_PI_F, by=list(syv.twr$DOY), FUN='sum', na.rm=TRUE)
+wcr.rain.day<-aggregate(wcr.twr$P_PI_F, by=list(wcr.twr$DOY), FUN='sum', na.rm=TRUE)
+
+
+gs.leaf<-c(170:250); #gs.leaf<-gs.leaf[syv.rain.day$x[gs.leaf]==0 & wcr.rain.day$x[gs.leaf]==0]
+
+wcr.mega.day<-aggregate(wcr.mega, by=list(wcr.twr$DOY), FUN='sum')
+wcr.mega.maples<-rowSums(wcr.mega.day[,wcr.forest$species=='acsa'])/6400 #L/m2, i.e. mm
+syv.mega.day<-aggregate(syv.mega, by=list(syv.twr$DOY), FUN='sum')
+syv.mega.maples<-rowSums(syv.mega.day[,syv.forest$species=='acsa'])/6400
+
+plot(wcr.mega.maples); plot(syv.mega.maples) 
+mean(wcr.mega.maples[gs.leaf], na.rm=TRUE);mean(syv.mega.maples[gs.leaf], na.rm=TRUE)
+#low for both; both about 25% ewers estimate with rainy days in, 30% with rainy days out.
+
+3.44/1.74; 3.88/1.47
+
+wcr.mega.maples[is.na(syv.mega.maples)]<-NA;syv.mega.maples[is.na(wcr.mega.maples)]<-NA
+mean(wcr.mega.maples[gs.leaf], na.rm=TRUE)/mean(syv.mega.maples[gs.leaf], na.rm=TRUE) #Ratio OK,not spectacular but difference is smaller than interannual variability
+
+#EL
+#Ewers WCR L is 3.7/5.4; syv L is 4.8/7.1 (7.1 is much higher than measured with Li-Cor)
+wcr.pctleaves<-3.7/5.4; syv.pctleaves<-4.8/7.1; syv.pctleaves.lai<-(5.54-1.13)/5.54 #Much more with li-cor, but that includes birch
+totleaves.wcr<-max(LAI.dat$WCR, na.rm=TRUE); totleaves.syv<-max(LAI.dat$SYV, na.rm=TRUE)
+
+mapleleaf.wcr<-wcr.pctleaves*totleaves.wcr; mapleleaf.syv<-syv.pctleaves*totleaves.syv
+
+wcr.mega.mapleleaf<-wcr.mega.maples/(wcr.pctleaves*totleaves.wcr); syv.mega.mapleleaf<-syv.mega.maples/(syv.pctleaves*totleaves.syv)
+plot(syv.mega.mapleleaf); plot(wcr.mega.mapleleaf)
+plot(syv.mega.mapleleaf[gs]*3.33~syv.master.day$VPD_PI_1, xlim=c(0,20))
+plot(wcr.mega.mapleleaf[gs]*3.33~wcr.master.day$VPD_PI_1, xlim=c(0,20)) #looks good except for a relative lack of curvature.
+
+###Soil moisture checks####
 sp.wcr<-as.character(wcr.tree$SPP); sp.syv<-as.character(syv.tree$SPP)
 
 coefholder.syv<-matrix(nrow=length(which(syv.tree$SPP=="OSVI"| syv.tree$SPP=="ACSA"))+12, ncol=4)
@@ -217,5 +315,7 @@ soil.table.wcr<-soil.table.wcr[order(soil.table.wcr$SPP),];soil.table.syv<-soil.
 #   points(syv.master.day[,i+10]~syv.master.day$NETRAD_1, col=cols[i])
 # }
 
+#Leaf area
+syv.tree.leaf<-0.375+(0.286*syv.tree$DBH^2.62)
 
 

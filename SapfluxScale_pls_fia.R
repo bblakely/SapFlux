@@ -216,6 +216,7 @@ diff.transp.pr<-cbind(georef,fia.transp.tot[,3]-pls.transp.tot[,3])
 #plotnice(diff.transp/(24*64*10),breakset.diff/(24*64*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 plotnice(diff.transp.pr/(24*64*10),breakset.diff/(24*64*10), colset="RdYlGn", title='Difference (Modern-Historic)')
 
+
 colnames(diff.transp.pr)[3]<-"tdiff"
 write.csv(diff.transp.pr, "pls.fia.transp.diff.csv")
 
