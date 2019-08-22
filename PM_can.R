@@ -4,7 +4,7 @@ source('Prepare_Data.R')
 source('Refine_TowerData.R')
 }
 
-site<-"syv"
+site<-"wcr"
 if(site=="syv"){dat<-syv.twr};if(site=='wcr'){dat<-wcr.twr}
 
 
@@ -102,6 +102,18 @@ rh.c.wp<-aerodynamic.conductance(data=dat.leaf, LAI=LAI, zr=zr,zh=zh,d=d,z0m=z0m
 
 #(surface conductance)
 rw<-surface.conductance(data=dat.leaf,S=dat.leaf$S, Ga=rh)$Gs_mol
+
+#assigned by site at this point
+
+plot(syv.rw[syv.rw>0], ylim=c(0,5));points(wcr.rw[wcr.rw>0], col='blue')
+
+
+syv.rw.cl<-syv.rw[which(syv.rw>quantile(syv.rw, 0.01, na.rm=TRUE) & syv.rw<quantile(syv.rw, 0.99, na.rm=TRUE))]; syv.rw.cl[syv.rw.cl<0]<-NA
+wcr.rw.cl<-wcr.rw[which(wcr.rw>quantile(wcr.rw, 0.01, na.rm=TRUE) &wcr.rw<quantile(wcr.rw, 0.99, na.rm=TRUE))]; wcr.rw.cl[wcr.rw.cl<0]<-NA
+
+hist(syv.rw.cl, xlim=c(-2,2)); hist(wcr.rw.cl, xlim=c(-2,2));
+median(syv.rw.cl); median(wcr.rw.cl, na.rm=TRUE)
+mean(syv.rw.cl, na.rm=TRUE); mean(wcr.rw.cl, na.rm=TRUE)
 
 #Penman-monteith potential
 Gs<-quantile(rw, 0.9, na.rm=TRUE)
