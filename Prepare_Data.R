@@ -1,4 +1,7 @@
-#Read in ALL the standardized data. Currently only for 2016.
+#Read in ALL the standardized data. Specify year here; 2016 works, 2015 in progress
+
+year<-2016
+
 
 #Data for measured trees
 source("Prepare_treedata.R")
@@ -45,11 +48,24 @@ wcr.forest<-calc.height(wcr.forest, maxheight=40)
 print('Forest data ready')
 
 #Sapflow
-#non-gapfilled
-wcr.raw<-read.csv('WCR_2016_SAPFLUX.csv')
-wcr.ts<-wcr.raw[1:4]
 
-#gapfilled
+#2015
+if(year==2015){
+wcr.raw<-read.csv('WCR_2015_gf.csv')
+wcr.ts<-read.csv('WCR_2015_SAPFLUX.csv')[1:4]
+wcr.gap<-data.frame(wcr.raw[2:15])
+wcr.gap[wcr.gap<0]<-0
+wcr.names<-colnames(read.csv('WCR_2015_SAPFLUX.csv'))
+colnames(wcr.gap)<-wcr.names[5:18]
+
+syv.raw<-read.csv('SYV_2015_gf.csv')
+syv.ts<-read.csv('SYV_2015_SAPFLUX.csv')[1:4]
+syv.gap<-data.frame(syv.raw[2:21])
+syv.gap[syv.gap<0]<-0
+syv.names<-colnames(read.csv('SYV_2015_SAPFLUX.csv'))
+colnames(syv.gap)<-syv.names[5:18]
+}
+
 wcr.gapfill<- read.csv('WCR_gapfill.csv')[2:15]
 wcr.gap<-data.frame(wcr.gapfill)
 wcr.gap[wcr.gap<0]<-0
@@ -70,7 +86,7 @@ print('Sapflux data ready')
 
 
 #Now apogee; easiest to just call a script
-source('Prepare_Apogee.R')
+source('Prepare_Apogee.R')  #Wrong as of 5-3; pulls 2016 apogee data
 rm("wcr.ap.2016","wcr.ap.2016.dat","wcr.ap.30", "wcr.clean")
 
 print('ST data ready')
@@ -81,11 +97,21 @@ rm("SYV_FullRaw","SYV_notfill","syv.rn","syv.twr.extra","WCR_FullRaw","WCR_notfi
    "shared","shared.rn","syv.orphans","usevars","wcr.orphans", "wcr.twr.extra")
 rm('wcr.twr.std', 'syv.twr.std') #Three-year timeseries. Not currently using.
 
+syv.twr.2015[syv.twr.2015==(-9999)]<-NA
+wcr.twr.2015[wcr.twr.2015==(-9999)]<-NA
+
 syv.twr.2016[syv.twr.2016==(-9999)]<-NA
 wcr.twr.2016[wcr.twr.2016==(-9999)]<-NA
 
 print('Tower data ready')
 
+if(year==2015){
+  syv.master<-cbind(syv.ts$YEAR,syv.twr.2015[,7],syv.ap[,3:10],syv.gap,syv.twr.2015[,10:35])
+  colnames(syv.master)[1]<-'YEAR'
+  
+  wcr.master<-cbind(wcr.ts$YEAR,wcr.twr.2015[,7],wcr.ap[,3:10],wcr.gap,wcr.twr.2015[,10:35])
+  colnames(wcr.master)[1]<-'YEAR'
+}
 
 syv.master<-cbind(syv.ts$YEAR,syv.twr.2016[,7],syv.ap[,3:10],syv.gap,syv.twr.2016[,10:35])
 colnames(syv.master)[1]<-'YEAR'
