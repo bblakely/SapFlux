@@ -1,5 +1,5 @@
 #Multi-year site comparison
-#Probablt depends on PM_can; was originally part of that script
+#Probablty depends on PM_can; was originally part of that script
 library(bigleaf)
 
 

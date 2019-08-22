@@ -1,9 +1,8 @@
 #source('SapFlow_Calc.R')
 site.id<-'wcr'
 
-
-wcr.raw<-read.csv("WCR_2016_SAPFLUX.csv")  #2016 data for both
-syv.raw<-read.csv("SYV_2016_SAPFLUX.csv")
+wcr.raw<-read.csv("WCR_2015_SAPFLUX.csv")  #2016 data for both
+syv.raw<-read.csv("SYV_2015_SAPFLUX.csv")
 
 #Generalize by site
 if(site.id=="wcr"){
@@ -18,6 +17,7 @@ if(site.id=="wcr"){
 }
 
 
+
 #STEP 1: LINEAR INTERPOLATION
 flux.interp<-data.frame(matrix(data=-9999,nrow=nrow(flux.site), ncol=ncol(flux.site)))
 colnames(flux.interp)<-colnames(flux.site)
@@ -28,6 +28,7 @@ interp.spacemap<-data.frame(matrix(data=NA,nrow=nrow(flux.site), ncol=ncol(flux.
 gaplength<-4  #max number of consecutuve missing values to interpolate across
 
 for(i in 1:nsens){
+  if(!is.na(mean(flux.site[,i], na.rm=TRUE))){ #Line to skip over all-NA sensors
   sens<-flux.site[,i]  #Pull sensor to fill
   col<-rep('black', length(sens))
   gap<-which(is.na(sens))  #Where are missing data
@@ -59,6 +60,7 @@ for(i in 1:nsens){
   
   interp.spacemap[,i]<-sens.space  #Make a lasting variable so we can look at interpolated spots later
 }
+  }
 rm('gap', 'spaces','start.ind','starts','ends',
      'lengths','fills','interp','sens', 'sens.space') #get rid of a bunch of extra vars
 
@@ -78,14 +80,14 @@ insite.fillmap<-data.frame(matrix(data=NA,nrow=nrow(flux.site), ncol=ncol(flux.s
 
 #2.1 Gather information about interpolation
 for (s in 1:nsens){
-  
+  if(!is.na(mean(DAT.SITE[,s], na.rm=TRUE))){
   sens.test<-DAT.SITE[,s]
   fitvec<-rep(0,ncol(DAT.SITE)) #R2
   slopevec<-rep(0,ncol(DAT.SITE)) #Slope
   intvec<-rep(0,ncol(DAT.SITE)) #Intercept
   
   for (i in 1:(ncol(DAT.SITE))){ 
-    
+    if(!is.na(mean(DAT.SITE[,i], na.rm=TRUE))){
     resid<-sens.test-DAT.SITE[,i] #Next several lines remove crazy outliers
     th.h<-quantile(resid, 0.99, na.rm=TRUE)
     th.l<-quantile(resid, 0.01, na.rm=TRUE)
@@ -101,6 +103,7 @@ for (s in 1:nsens){
     
     bf<-max(fitvec[fitvec!=1]) #Find best fit (highest R2)
     }
+    }
   
   print(paste('Best match for sensor', s, 'is sensor', which(fitvec==bf), "with r2 =", fitvec[which(fitvec==bf)]))
   bestfits[1,s]<-slopevec[which(fitvec==bf)] #Store slope, intercept, R2, and sensor ID of best fit sensor
@@ -108,6 +111,7 @@ for (s in 1:nsens){
   bestfits[3,s]<-fitvec[which(fitvec==bf)]
   bestfits[4,s]<-which(fitvec==bf)
 }
+  }
 
 rm('resid','th.h','th.l')
 
@@ -116,6 +120,7 @@ flux.gf.dat<-matrix(NA,nrow(flux.site), nsens) #Will hold final series
 flux.fills<-matrix(NA,nrow(flux.site), nsens) #Will hold just gapfilled parts, mainly for plotting
 
 for(i in 1:nsens){
+  if(!is.na(mean(flux.interp[,i], na.rm=TRUE))){
   flux.gap<-flux.interp[,i] #pull out sensor of interest
   pair.ind<-bestfits[4,i] #Which sensor is best match?
   flux.pair<-flux.interp[,pair.ind] #Pull out matching sensor
@@ -136,7 +141,7 @@ for(i in 1:nsens){
   plot(flux.gap, type='l', lwd=3, main=i)
   lines(interp.spacemap[,i], col='red', lwd=3) #Interpolation fills
   lines(insite.fillmap[,i], col='green') #Insite regression fills
-  
+  }
 }
 
 if(site.id=="wcr"){flux.gf.dat->wcr.gapfill}else{flux.gf.dat->syv.gapfill}

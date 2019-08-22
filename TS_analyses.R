@@ -343,14 +343,14 @@ plot(wcr.td[daygs]~wcr.bowen[daygs], xlim=c(-3,4), ylab='Ts-Ta', xlab="Bowen Rat
 abline(h=0, col='red')
 abline(v=0, col='red')
 
-smoothScatter(syv.twr$LE_1[daygs]~syv.sap.all[daygs])
-smoothScatter(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs])
+smoothScatter(syv.twr$LE_1[daygs]~syv.sap.all[daygs]*0.27)
+smoothScatter(wcr.twr$LE_1[daygs]~wcr.sap.all[daygs]*0.27)
 #Sapflux is lower limit of LE
 #Make a fit line
 #Space above is evap contribution probably; does SYV have more evap?
 
-smoothScatter(syv.twr$LE_1[midgs]~syv.sap.all[midgs])
-smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs])
+smoothScatter(syv.twr$LE_1[midgs]~syv.sap.all[midgs]*0.27)
+smoothScatter(wcr.twr$LE_1[midgs]~wcr.sap.all[midgs]*0.27)
 
 par(mfrow=c(2,2))
 smoothScatter(syv.twr$VPD_PI_1[daygs]~syv.sap.all[daygs], ylim=c(0,25), xlim=c(0,650))
@@ -364,7 +364,7 @@ par(mfrow=c(1,2))
 ####T:ET####
 LE.sap.syv<-(syv.sap.all*2260*1000*1.37)/(6400*1800) #2260: spec. heat water KJ/kg (1kg = 1L); 1000: KJ to Joules; 1.37: surveyed area to total area. 6400: plot (80*80) to m2;  1800: 3o min to s
 plot(syv.twr$LE_1, col='gray', type='l', ylim=c(-100,600), ylab='LH', xlab='obs', main='SYV'); lines(LE.sap.syv)
-t.et.gs.syv<-LE.sap.syv[gsind]/syv.twr$LE_1[gsind]
+t.et.gs.syv<-LE.sap.syv[gsind]/(syv.twr$LE_1[gsind])
 t.et.gs.syv[t.et.gs.syv>1 | t.et.gs.syv<0]<-NA
 mean(t.et.gs.syv, na.rm=TRUE) #T:ET of 32% in gs
 
@@ -376,6 +376,14 @@ t.et.gs.wcr[t.et.gs.wcr>1 | t.et.gs.wcr<0]<-NA
 mean(t.et.gs.wcr, na.rm=TRUE) #T:ET of 39% in gs
 #Definitely use these
 #Combined with vpd, this might mean eco controls LE more tightly at WCR
+
+#for comparison to Desai
+syv.daily<-aggregate(syv.mega, by=list(syv.ts$DOY), FUN='sum')# daily transp, in L, per tree
+syv.dayall<-rowSums(syv.daily[2:303]) #L transp surveyed
+syv.mm<-(syv.dayall*1.37)/6400 # in L/surveyed area; 1.37 surveyed area per real area, 6400 m2 per real area
+
+
+
 
 ####Explore radiation differences####
 rad.diff<-wcr.twr$NETRAD_1-syv.twr$NETRAD_1
