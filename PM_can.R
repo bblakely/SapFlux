@@ -4,7 +4,7 @@ source('Prepare_Data.R')
 source('Refine_TowerData.R')
 }
 
-site<-"wcr"
+site<-"syv"
 if(site=="syv"){dat<-syv.twr};if(site=='wcr'){dat<-wcr.twr}
 
 
@@ -100,20 +100,51 @@ rh.wp<-aerodynamic.conductance(data=dat.leaf, zr=zr,zh=zh,d=d,z0m=z0m, wind_prof
 rh.c<-aerodynamic.conductance(data=dat.leaf, LAI=LAI, zr=zr,zh=zh,d=d,z0m=z0m,Dl=0.1, Rb_model="Choudhury_1988")$Ga_h
 rh.c.wp<-aerodynamic.conductance(data=dat.leaf, LAI=LAI, zr=zr,zh=zh,d=d,z0m=z0m,Dl=0.1,wind_profile = TRUE,Rb_model="Choudhury_1988")$Ga_h
 
+if(site=='syv'){syv.rh<-rh}
+if(site=='wcr'){wcr.rh<-rh}
+
+
 #(surface conductance)
 rw<-surface.conductance(data=dat.leaf,S=dat.leaf$S, Ga=rh)$Gs_mol
-
+if(site=='syv'){syv.rw<-rw}
+if(site=='wcr'){wcr.rw<-rw}
 #assigned by site at this point
 
 plot(syv.rw[syv.rw>0], ylim=c(0,5));points(wcr.rw[wcr.rw>0], col='blue')
-
 
 syv.rw.cl<-syv.rw[which(syv.rw>quantile(syv.rw, 0.01, na.rm=TRUE) & syv.rw<quantile(syv.rw, 0.99, na.rm=TRUE))]; syv.rw.cl[syv.rw.cl<0]<-NA
 wcr.rw.cl<-wcr.rw[which(wcr.rw>quantile(wcr.rw, 0.01, na.rm=TRUE) &wcr.rw<quantile(wcr.rw, 0.99, na.rm=TRUE))]; wcr.rw.cl[wcr.rw.cl<0]<-NA
 
 hist(syv.rw.cl, xlim=c(-2,2)); hist(wcr.rw.cl, xlim=c(-2,2));
-median(syv.rw.cl); median(wcr.rw.cl, na.rm=TRUE)
+median(syv.rw.cl, na.rm=TRUE); median(wcr.rw.cl, na.rm=TRUE)
 mean(syv.rw.cl, na.rm=TRUE); mean(wcr.rw.cl, na.rm=TRUE)
+
+
+#Follow-up:
+# (1) FIX conductance formulation!
+
+
+syv.rw.comp<-syv.rw[syv.twr.2016$P_PI_F==0 & syv.twr.2016$DOY%in%c(170:250)& syv.twr.2016$HOUR%in%c(10:14)]
+wcr.rw.comp<-wcr.rw[wcr.twr.2016$P_PI_F==0 & wcr.twr.2016$DOY%in%c(170:250)& syv.twr.2016$HOUR%in%c(10:14)]
+
+syv.rw.cl.comp<-syv.rw.comp[which(syv.rw.comp>quantile(syv.rw.comp, 0.01, na.rm=TRUE) & syv.rw.comp<quantile(syv.rw.comp, 0.99, na.rm=TRUE))]; syv.rw.cl.comp[syv.rw.cl.comp<0]<-NA
+wcr.rw.cl.comp<-wcr.rw.comp[which(wcr.rw.comp>quantile(wcr.rw.comp, 0.01, na.rm=TRUE) & wcr.rw.comp<quantile(wcr.rw.comp, 0.99, na.rm=TRUE))]; wcr.rw.cl.comp[wcr.rw.cl.comp<0]<-NA
+
+hist(syv.rw.cl.comp, xlim=c(0,2.5), breaks=seq(from=0, to=3, length.out=20))
+hist(wcr.rw.cl.comp, xlim=c(0,2.5), breaks=seq(from=0, to=3, length.out=20))
+
+syv.us<-quantile(syv.rw.cl.comp, 0.9, na.rm=TRUE);syv.us
+wcr.us<-quantile(wcr.rw.cl.comp, 0.9, na.rm=TRUE);wcr.us
+
+syv.scl<-syv.rw.cl.comp/syv.us
+wcr.scl<-wcr.rw.cl.comp/wcr.us
+
+hist(syv.scl,xlim=c(0,1), breaks=seq(from=0, to=5, length.out=50))
+hist(wcr.scl,xlim=c(0,1), breaks=seq(from=0, to=5, length.out=50))
+
+hist(wcr.scl,xlim=c(0,3), breaks=seq(from=0, to=5, length.out=50), ylim=c(0, 100))
+hist(syv.scl,xlim=c(0,3), breaks=seq(from=0, to=5, length.out=50), ylim=c(0, 100))
+
 
 #Penman-monteith potential
 Gs<-quantile(rw, 0.9, na.rm=TRUE)
@@ -124,6 +155,51 @@ plot(PM$LE_pot);points(dat$LE_1, col='blue')
 
 if(site=='syv'){PM.syv<-PM$LE_pot;LE.syv<-dat$LE_1}
 if(site=='wcr'){PM.wcr<-PM$LE_pot;LE.wcr<-dat$LE_1}
+
+
+#PM with matched connductances
+
+rw.gen<-(syv.rw+wcr.rw)/2
+rh.gen<-(syv.rh+wcr.rh)/2
+
+if(site=='syv'){
+  PM.gen.syv<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh.gen,Gs_pot = rw.gen, approach="Penman-Monteith")
+  PM.gen.rh.syv<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh,Gs_pot = rw.gen, approach="Penman-Monteith")
+  PM.gen.rw.syv<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh.gen,Gs_pot = rw, approach="Penman-Monteith")
+  PM.actual.syv<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh,Gs_pot = rw, approach="Penman-Monteith")
+
+  }
+if(site=='wcr'){
+  PM.gen.wcr<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh.gen,Gs_pot = rw.gen, approach="Penman-Monteith")
+  PM.gen.rh.wcr<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh,Gs_pot = rw.gen, approach="Penman-Monteith")
+  PM.gen.rw.wcr<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh.gen,Gs_pot = rw, approach="Penman-Monteith")
+  PM.actual.wcr<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh,Gs_pot = rw, approach="Penman-Monteith")
+  }
+
+
+
+plot(PM.gen.syv$LE_pot, ylim=c(0,500))
+plot(PM.gen.wcr$LE_pot, ylim=c(0,500))
+
+plot(PM.gen.rh.syv$LE_pot, ylim=c(0,500))
+plot(PM.gen.rh.wcr$LE_pot, ylim=c(0,500))
+
+plot(PM.gen.rw.syv$LE_pot, ylim=c(0,500))
+plot(PM.gen.rw.wcr$LE_pot, ylim=c(0,500))
+
+
+plot(PM.actual.syv$LE_pot, ylim=c(0,500))
+plot(PM.actual.wcr$LE_pot, ylim=c(0,500))
+
+
+
+
+
+
+
+
+PM<-potential.ET(data=dat.leaf,S=dat.leaf$S,Ga=rh,Gs_pot = Gs, approach="Penman-Monteith")
+plot(PM$LE_pot);points(dat$LE_1, col='blue')
 
 
 plot(PM.syv[daygs])
@@ -146,60 +222,60 @@ abline(0,1,col='red')
 #Sylvania is further from its potential ET than WCR
 
 
-#Gs from sap flux
-source('Calc_Sapflow_Full.R')
-syv.totals<-rowMeans(syv.gap)
-
-y<-psychrometric.constant(Tair=syv.twr$TA_1,pressure=syv.twr$PA_1) 
-lam<-latent.heat.vaporization(Tair=syv.twr$TA_1)
-rho<-air.density(Tair=syv.twr$TA_1, pressure=syv.twr$PA_1, constants = bigleaf.constants())
-cp<-1004.834
-D<-syv.twr$VPD_PI_1*0.1
-Leaf<-mean(LAI.dat$SYV[LAI.dat$DOY%in%c(150:250)])*6400; sa.p<-(sum(syv.forest$SWA/10000)*1.27)
-
-#Equation from pataki
-Gs<-(y*lam*syv.totals)/(rho*cp*D*(Leaf/sa.p))
-Gs[Gs==Inf]<-NA
-Gs[which(Gs>quantile(Gs, 0.99, na.rm=TRUE)| Gs<quantile(Gs, 0.01, na.rm=TRUE))]<-NA
-hist(Gs[daygs])
-
-#EWUE
-#ewue.wcr<-wcr.twr$GPP_PI_F[daygs]/LE.to.ET(wcr.twr$LE_1[daygs], wcr.twr$TA_1[daygs]); plot(ewue.wcr, ylim=quantile(ewue.wcr, c(0.01,0.99), na.rm=TRUE))
-#ewue.syv<-syv.twr$GPP_PI_F[daygs]/LE.to.ET(syv.twr$LE_1[daygs], syv.twr$TA_1[daygs]); plot(ewue.syv, ylim=quantile(ewue.wcr, c(0.01,0.99), na.rm=TRUE))
-
-#Rc SW
-
-bigts<-read.csv('WCR_Tower_2015_2017.csv')
-carb<-read.csv('WCR_Tower_ex.csv')$CO2_PI_F_1_1_1[bigts$YEAR=="2016"]
-g1<-2
-rs.sw.syv<-(1.6*(1+(g1/sqrt(syv.twr$VPD_PI_1*0.1)))*(syv.twr$GPP_PI_F/carb))^-1;rs.sw.syv[rs.sw.syv==Inf]<-NA
-rs.sw.wcr<-(1.6*(1+(g1/sqrt(wcr.twr$VPD_PI_1*0.1)))*(wcr.twr$GPP_PI_F/carb))^-1;rs.sw.wcr[rs.sw.wcr==Inf]<-NA
-
-smoothScatter(rs.sw.wcr[daygs], ylim=c(0,30))
-smoothScatter(rs.sw.syv[daygs])
-
-median(rs.sw.wcr[daygs]-rs.sw.syv[daygs], na.rm=TRUE)
-
-#uWUE
-library(quantreg)
-
-syv.uwu<-syv.twr$GPP_PI_F*((syv.twr$VPD_PI_1*0.1)^0.5)
-plot(syv.uwu~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1))
-quant.syv<-rq(syv.uwu~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1), tau=0.95);abline(coef(quant.syv)[1],coef(quant.syv)[2], col='red')
-
-
-wcr.uwu<-wcr.twr$GPP_PI_F*((syv.twr$VPD_PI_1*0.1)^0.5)
-plot(wcr.uwu~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1))
-quant.wcr<-rq(wcr.uwu~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1), tau=0.95); abline(coef(quant.wcr)[1],coef(quant.wcr)[2], col='red')
-
-
-daytest<-which(wcr.twr$DOY%in%c(200, 208))
-
-plot(wcr.uwu[daytest]~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1)[daytest])
-dayfit<-(lm(wcr.uwu[daytest]~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1)[daytest]))
-coef(dayfit)[2]/coef(quant.wcr)[2]
-
-plot(syv.uwu[daytest]~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1)[daytest])
-dayfit<-(lm(syv.uwu[daytest]~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1)[daytest]))
-coef(dayfit)[2]/coef(quant.syv)[2]
-
+# #Gs from sap flux
+# source('Calc_Sapflow_Full.R')
+# syv.totals<-rowMeans(syv.gap)
+# 
+# y<-psychrometric.constant(Tair=syv.twr$TA_1,pressure=syv.twr$PA_1) 
+# lam<-latent.heat.vaporization(Tair=syv.twr$TA_1)
+# rho<-air.density(Tair=syv.twr$TA_1, pressure=syv.twr$PA_1, constants = bigleaf.constants())
+# cp<-1004.834
+# D<-syv.twr$VPD_PI_1*0.1
+# Leaf<-mean(LAI.dat$SYV[LAI.dat$DOY%in%c(150:250)])*6400; sa.p<-(sum(syv.forest$SWA/10000)*1.27)
+# 
+# #Equation from pataki
+# Gs<-(y*lam*syv.totals)/(rho*cp*D*(Leaf/sa.p))
+# Gs[Gs==Inf]<-NA
+# Gs[which(Gs>quantile(Gs, 0.99, na.rm=TRUE)| Gs<quantile(Gs, 0.01, na.rm=TRUE))]<-NA
+# hist(Gs[daygs])
+# 
+# #EWUE
+# #ewue.wcr<-wcr.twr$GPP_PI_F[daygs]/LE.to.ET(wcr.twr$LE_1[daygs], wcr.twr$TA_1[daygs]); plot(ewue.wcr, ylim=quantile(ewue.wcr, c(0.01,0.99), na.rm=TRUE))
+# #ewue.syv<-syv.twr$GPP_PI_F[daygs]/LE.to.ET(syv.twr$LE_1[daygs], syv.twr$TA_1[daygs]); plot(ewue.syv, ylim=quantile(ewue.wcr, c(0.01,0.99), na.rm=TRUE))
+# 
+# #Rc SW
+# 
+# bigts<-read.csv('WCR_Tower_2015_2017.csv')
+# carb<-read.csv('WCR_Tower_ex.csv')$CO2_PI_F_1_1_1[bigts$YEAR=="2016"]
+# g1<-2
+# rs.sw.syv<-(1.6*(1+(g1/sqrt(syv.twr$VPD_PI_1*0.1)))*(syv.twr$GPP_PI_F/carb))^-1;rs.sw.syv[rs.sw.syv==Inf]<-NA
+# rs.sw.wcr<-(1.6*(1+(g1/sqrt(wcr.twr$VPD_PI_1*0.1)))*(wcr.twr$GPP_PI_F/carb))^-1;rs.sw.wcr[rs.sw.wcr==Inf]<-NA
+# 
+# smoothScatter(rs.sw.wcr[daygs], ylim=c(0,30))
+# smoothScatter(rs.sw.syv[daygs])
+# 
+# median(rs.sw.wcr[daygs]-rs.sw.syv[daygs], na.rm=TRUE)
+# 
+# #uWUE
+# library(quantreg)
+# 
+# syv.uwu<-syv.twr$GPP_PI_F*((syv.twr$VPD_PI_1*0.1)^0.5)
+# plot(syv.uwu~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1))
+# quant.syv<-rq(syv.uwu~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1), tau=0.95);abline(coef(quant.syv)[1],coef(quant.syv)[2], col='red')
+# 
+# 
+# wcr.uwu<-wcr.twr$GPP_PI_F*((syv.twr$VPD_PI_1*0.1)^0.5)
+# plot(wcr.uwu~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1))
+# quant.wcr<-rq(wcr.uwu~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1), tau=0.95); abline(coef(quant.wcr)[1],coef(quant.wcr)[2], col='red')
+# 
+# 
+# daytest<-which(wcr.twr$DOY%in%c(200, 208))
+# 
+# plot(wcr.uwu[daytest]~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1)[daytest])
+# dayfit<-(lm(wcr.uwu[daytest]~LE.to.ET(wcr.twr$LE_1, Tair = wcr.twr$TA_1)[daytest]))
+# coef(dayfit)[2]/coef(quant.wcr)[2]
+# 
+# plot(syv.uwu[daytest]~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1)[daytest])
+# dayfit<-(lm(syv.uwu[daytest]~LE.to.ET(syv.twr$LE_1, Tair = syv.twr$TA_1)[daytest]))
+# coef(dayfit)[2]/coef(quant.syv)[2]
+# 
