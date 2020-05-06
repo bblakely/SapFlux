@@ -96,10 +96,6 @@ colvec<-rep('black', nrow(syv.sap));colvec[syv.twr.std$YEAR==2015]<-'red';colvec
 
 wcr.twr.std[wcr.twr.std==-9999]<-NA; syv.twr.std[syv.twr.std==-9999]<-NA
 
-#gsind<-which(wcr.twr.std$MONTH%in%c(5:9)&wcr.twr.std$HOUR%in%c(6:20)) #gsind is daytime in growing season
-#syv.16.17<-aggregate(syv.sap[syv.twr.std$YEAR!=2015,], by=list(syv.twr.std$DTIME[syv.twr.std$YEAR!=2015]), FUN='mean', na.rm=TRUE)
-#wcr.16.17<-aggregate(wcr.sap[wcr.twr.std$YEAR!=2015,], by=list(wcr.twr.std$DTIME[wcr.twr.std$YEAR!=2015]), FUN='mean', na.rm=TRUE)
-
 #####
 
 
@@ -155,7 +151,7 @@ par(mfrow=c(1,1))
 source('Calc_Sapflow_Full_v2.R')
 
 #Cleanup of 'values'
-rm(list=ls(pattern="^big"));rm(list=ls(pattern="dirtdry"));rm(list=ls(pattern="airdry"))
+rm(list=ls(pattern="^big"));#rm(list=ls(pattern="airdry"))
 
 #####
 
@@ -172,12 +168,12 @@ ind<-which(ts.gs$YEAR==yearlist[i])
 ind.full<-which(wcr.ts$YEAR==yearlist[i]) #use of wcr is arbitrary; both are the same
 
 #average daily flux rates, measured trees, growing season
-wcr.sapday[[i]]<-aggregate(wcr.sapfig[ind,], by=list(wcr.ts$DOY[ind]), FUN='mean')[2:(ncol(wcr.sapfig)+1)]
-syv.sapday[[i]]<-aggregate(syv.sapfig[ind,], by=list(syv.ts$DOY[ind]), FUN='mean')[2:(ncol(syv.sapfig)+1)]
+wcr.sapday[[i]]<-aggregate(wcr.sapfig[ind,], by=list(wcr.ts$DOY[ind]), FUN='mean', na.rm=TRUE)[2:(ncol(wcr.sapfig)+1)]
+syv.sapday[[i]]<-aggregate(syv.sapfig[ind,], by=list(syv.ts$DOY[ind]), FUN='mean', na.rm=TRUE)[2:(ncol(syv.sapfig)+1)]
 
 #aveerage daily flux rates, measured trees, all year
-wcr.sapday.full[[i]]<-aggregate(wcr.sap[ind.full,], by=list(wcr.ts$DOY[ind.full]), FUN='mean')[2:(ncol(wcr.sap)+1)]
-syv.sapday.full[[i]]<-aggregate(syv.sap[ind.full,], by=list(syv.ts$DOY[ind.full]), FUN='mean')[2:(ncol(syv.sap)+1)]
+wcr.sapday.full[[i]]<-aggregate(wcr.sap[ind.full,], by=list(wcr.ts$DOY[ind.full]), FUN='mean', na.rm=TRUE)[2:(ncol(wcr.sap)+1)]
+syv.sapday.full[[i]]<-aggregate(syv.sap[ind.full,], by=list(syv.ts$DOY[ind.full]), FUN='mean', na.rm=TRUE)[2:(ncol(syv.sap)+1)]
 
 #Originally measured 30 min flux rates, all year.
 wcr.sap.1[[i]]<-wcr.sap[wcr.ts$YEAR==yearlist[i],]
@@ -227,7 +223,7 @@ box(lwd=3)
 text(7,45, yearlist[i])
 }
 
-rm(wcr.maple, syv.maple)
+rm(wcr.maple, syv.maple, syv.sapyr, wcr.sapyr)
 
 ###Species flow bricks####
 par(mfrow=c(3,2))
@@ -417,7 +413,7 @@ for(i in 1:length(yearlist)){
 #Prep####
 #SYV
 HL.syv<-c(1:4,8,10,19:20)  #11 is left out because bad data quality
-SM.syv<-c(9,13:18);HB.syv<-c(5,6);YB.syv<-c(7,12)
+SM.syv<-c(9,13:17);HB.syv<-c(5,6);YB.syv<-c(7,12)
 HL.tr.f<-rowMeans(syv.sap.1[[i]][,HL.syv], na.rm=TRUE)
 SM.tr.f<-rowMeans(syv.sap.1[[i]][,SM.syv], na.rm=TRUE) #Few trees dead in winter; this gives better timeseries
 HB.tr.f<-rowMeans(syv.sap.1[[i]][,HB.syv], na.rm=TRUE)
@@ -462,7 +458,7 @@ for(i in 1:length(yearlist)){
   #Prep####
   #SYV
   HL.syv<-c(1:4,8,10,19:20)  #11 is left out because bad data quality
-  SM.syv<-c(9,13:18);HB.syv<-c(5,6);YB.syv<-c(7,12)
+  SM.syv<-c(9,13:17);HB.syv<-c(5,6);YB.syv<-c(7,12)
   HL.tr.f<-rowMeans(syv.sap.1[[i]][,HL.syv], na.rm=TRUE)
   SM.tr.f<-rowMeans(syv.sap.1[[i]][,SM.syv], na.rm=TRUE) #Few trees dead in winter; this gives better timeseries
   HB.tr.f<-rowMeans(syv.sap.1[[i]][,HB.syv], na.rm=TRUE)
@@ -501,8 +497,8 @@ diff.dc[i]<-sum(colMeans(wcr.dcpool[150:250,], na.rm=TRUE))-sum(colMeans(syv.dcp
 }
 
 #Cleanup
-rm(list=ls(pattern="smpool"));rm(list=ls(pattern="dc.pool"));rm(list=ls(pattern=".tr.f"))
-rm(list=ls(pattern="AB."));rm(list=ls(pattern="HL."));rm(list=ls(pattern="SM."));rm(list=ls(pattern="YB."));rm(list=ls(pattern="HB."));rm(list=ls(pattern="GA."))
+rm(list=ls(pattern="smpool"));rm(list=ls(pattern="dcpool"));rm(list=ls(pattern="dc.pool"));rm(list=ls(pattern=".tr.f"))
+rm(list=ls(pattern="AB."));rm(list=ls(pattern="HL."));rm(list=ls(pattern="YB."));rm(list=ls(pattern="HB."));rm(list=ls(pattern="GA."))
 
 #####
 
@@ -546,40 +542,62 @@ ggplot(diffs.agg) +
   annotate("text", x = 5, y = -5000, label = "OF > MF", size=5)+
   theme_minimal()
 
+rm('opos')
+
 #####
 
 ##VPD vs sap####
 
 library(RColorBrewer)
 dry<-30
-par(mfrow=c(2,3), mar=c(4,4,3,1))
+dryair<-10
+par(mfrow=c(2,3), mar=c(3,4,3,1))
 col<-brewer.pal(n=9, name='Oranges')
+
+drymethod<-'absolute'
+if(drymethod=='relative'){
+  syv.dirtdry1<-syv.dirtdry
+  wcr.dirtdry1<-wcr.dirtdry
+  
+  syv.airdry1<-syv.airdry
+  wcr.airdry1<-wcr.airdry
+}else{
+  syv.dirtdry1<-wcr.dirtdry1<-dry
+  syv.airdry1<-wcr.airdry1<-dryair
+}
 
 syv.dayvpd<-aggregate(syv.twr.std$VPD_PI_1, by=list(syv.twr.std$YEAR, syv.twr.std$DOY), FUN='mean', na.rm=TRUE)
 syv.dayvpd<-syv.dayvpd[syv.dayvpd$Group.2%in%gs,]
+syv.dayvpd$pch<-rep(19, length(syv.dayvpd$x));syv.dayvpd$pch[syv.dayvpd$x<syv.airdry1]<-1
+
 
 syv.daysoil<-aggregate(syv.twr.std$SWC_1, by=list(syv.twr.std$DOY, syv.twr.std$YEAR), FUN='mean', na.rm=TRUE)
 syv.daysoil<-syv.daysoil[syv.daysoil$Group.1%in%gs,]
-syv.daysoil$pch<-rep(1, length(syv.daysoil$x));syv.daysoil$pch[syv.daysoil$x<syv.dirtdry]<-19
+syv.daysoil$pch<-rep(19, length(syv.daysoil$x));syv.daysoil$pch[syv.daysoil$x<syv.dirtdry1]<-1
 
-
-for (y in 1:3){
-plot(syv.sapday[[2]][,1]~syv.dayvpd$x[syv.dayvpd$Group.1==yearlist[2]],pch=pch, ylim=c(0,45),xlim=c(0,18), col='white', main=yearlist[y], xlab='', ylab="Daily avg. Js (g/m2 s)", font.lab=2)
-colcount<-0
-for(i in c(SM.syv, 11)){
-colcount<-colcount+1
-points(syv.sapday[[y]][,i]~syv.dayvpd$x[syv.dayvpd$Group.1==yearlist[y]], pch=syv.daysoil$pch[syv.daysoil$Group.2==yearlist[y]], main=i, ylim=c(0,20),col=col[colcount+1])
-}
-}
 
 wcr.dayvpd<-aggregate(wcr.twr.std$VPD_PI_1, by=list(wcr.twr.std$YEAR, wcr.twr.std$DOY), FUN='mean', na.rm=TRUE)
 wcr.dayvpd<-wcr.dayvpd[wcr.dayvpd$Group.2%in%gs,]
+wcr.dayvpd$pch<-rep(19, length(wcr.dayvpd$x));wcr.dayvpd$pch[wcr.dayvpd$x<wcr.airdry1]<-1
+
 
 wcr.daysoil<-aggregate(wcr.twr.std$SWC_1, by=list(wcr.twr.std$DOY, wcr.twr.std$YEAR), FUN='mean', na.rm=TRUE)
 wcr.daysoil<-wcr.daysoil[wcr.daysoil$Group.1%in%gs,]
-wcr.daysoil$pch<-rep(1, length(wcr.daysoil$x));wcr.daysoil$pch[wcr.daysoil$x<wcr.dirtdry]<-19
+wcr.daysoil$pch<-rep(19, length(wcr.daysoil$x));wcr.daysoil$pch[wcr.daysoil$x<wcr.dirtdry1]<-1
 
 
+##Against VPD
+#SYV
+for (y in 1:3){
+  plot(syv.sapday[[2]][,1]~syv.dayvpd$x[syv.dayvpd$Group.1==yearlist[2]],pch=pch, ylim=c(0,45),xlim=c(0,18), col='white', main=yearlist[y], xlab='', ylab="Daily avg. Js (g/m2 s)", font.lab=2)
+  colcount<-0
+  for(i in c(SM.syv, 11)){
+    colcount<-colcount+1
+    points(syv.sapday[[y]][,i]~syv.dayvpd$x[syv.dayvpd$Group.1==yearlist[y]], pch=syv.daysoil$pch[syv.daysoil$Group.2==yearlist[y]], main=i, ylim=c(0,20),col=col[colcount+1])
+  }
+}
+
+#WCR
 for (y in 1:3){
   plot(wcr.sapday[[2]][,1]~wcr.dayvpd$x[wcr.dayvpd$Group.1==yearlist[2]],pch=pch, ylim=c(0,45),xlim=c(0,18), col='white', main=yearlist[y], xlab="VPD (HPa)", ylab="Daily avg. Js (g/m2 s)", font.lab=2)
   colcount<-0
@@ -589,100 +607,152 @@ for (y in 1:3){
   }
 }
 
+##Against soil
+#SYV
+for (y in 1:3){
+  plot(syv.sapday[[2]][,1]~syv.daysoil$x[syv.daysoil$Group.2==yearlist[2]],pch=pch, ylim=c(0,45),xlim=c(7,52), col='white', main=yearlist[y], xlab='', ylab="Daily avg. Js (g/m2 s)", font.lab=2)
+  colcount<-0
+  for(i in c(SM.syv, 11)){
+    colcount<-colcount+1
+    points(syv.sapday[[y]][,i]~syv.daysoil$x[syv.daysoil$Group.2==yearlist[y]], pch=syv.dayvpd$pch[syv.dayvpd$Group.1==yearlist[y]], main=i, ylim=c(0,20),col=alpha(col[colcount+1]),0.6)
+  
+    regline<-lm(syv.sapday[[y]][,i]~syv.daysoil$x[syv.daysoil$Group.2==yearlist[y]])
+    coef<-regline$coef;pval<-summary(regline)$coefficients[,4][2]
+    if(pval<0.05){
+    clip(min(syv.daysoil$x[syv.daysoil$Group.2==yearlist[y]],na.rm=TRUE)-3, max(syv.daysoil$x[syv.daysoil$Group.2==yearlist[y]], na.rm=TRUE)+3, -100, 100)
+    abline(coef[1], coef[2], col=col[colcount+1], lwd=4, lty=3)
+    }
+    }
+}
 
+#WCR
+for (y in 1:3){
+  plot(wcr.sapday[[2]][,1]~wcr.daysoil$x[wcr.daysoil$Group.2==yearlist[2]],pch=pch, ylim=c(0,45),xlim=c(7,52), col='white', main=yearlist[y], xlab='', ylab="Daily avg. Js (g/m2 s)", font.lab=2)
+  colcount<-0
+  for(i in c(SM.wcr, 11)){
+    colcount<-colcount+1
+    points(wcr.sapday[[y]][,i]~wcr.daysoil$x[wcr.daysoil$Group.2==yearlist[y]], pch=wcr.dayvpd$pch[wcr.dayvpd$Group.1==yearlist[y]], main=i, ylim=c(0,20),col=alpha(col[colcount+1], 0.6))
+    
+    regline<-lm(wcr.sapday[[y]][,i]~wcr.daysoil$x[wcr.daysoil$Group.2==yearlist[y]])
+    coef<-regline$coef; pval<-summary(regline)$coefficients[,4][2]
+    
+    if(pval<0.05){
+    clip(min(wcr.daysoil$x[wcr.daysoil$Group.2==yearlist[y]],na.rm=TRUE)-3, max(wcr.daysoil$x[wcr.daysoil$Group.2==yearlist[y]], na.rm=TRUE)+3, -100, 100)
+    abline(coef[1], coef[2], col=col[colcount+1], lwd=4, lty=3)
+    }
+  }
+}
+
+rm('regline', 'coef', 'pval')
 #Overview####
 
 wcr.drytimes.1<-which(wcr.twr.d$SWC_1<30);syv.drytimes.1<-which(syv.twr.d$SWC_1<30);
 
-
-# par(mfrow=c(2,1), mar=c(2,4.5,1,1))
-# xax1<-aggregate((wcr.ts$YEAR)+(wcr.ts$DOY/366), by=list(wcr.ts$DOY, wcr.ts$YEAR), FUN='mean')$x
-# wcr.pchvec<-rep(1, length(xax1));wcr.pchvec[wcr.drytimes]<-19
-# syv.pchvec<-rep(2, length(xax1));syv.pchvec[syv.drytimes]<-17
-# 
-# wcr.sapday.all<-rbind(wcr.day[[1]],wcr.day[[2]],wcr.day[[3]])
-# plot(rowSums(wcr.sapday.all)~xax1, pch=wcr.pchvec, ylim=c(0,12000), xaxt='n', ylab="Sapflow, L/day")
-# 
-# syv.sapday.all<-rbind(syv.day[[1]],syv.day[[2]],syv.day[[3]])
-# plot(rowSums(syv.sapday.all)~xax1, pch=syv.pchvec,ylim=c(0,12000), ylab="Sapflow, L/day")
-# 
-
-par(mfrow=c(2,1), mar=c(2,4.5,1,1))
+par(mfrow=c(2,1), mar=c(2,4.5,1,1), xpd=FALSE)
 xax1<-aggregate((wcr.ts$YEAR)+(wcr.ts$DOY/366), by=list(wcr.ts$DOY, wcr.ts$YEAR), FUN='mean')$x
-wcr.pchvec<-rep(1, length(xax1));wcr.pchvec[wcr.drytimes]<-19
-syv.pchvec<-rep(2, length(xax1));syv.pchvec[syv.drytimes]<-17
+wcr.pchvec<-rep(19, length(xax1));wcr.pchvec[wcr.drytimes]<-1
+syv.pchvec<-rep(17, length(xax1));syv.pchvec[syv.drytimes]<-2
+
+syv.colvec<-rep(alpha('black', 0.7), length(xax1));syv.colvec[syv.drytimes]<-'black'
+wcr.colvec<-rep(alpha('black', 0.7), length(xax1));wcr.colvec[wcr.drytimes]<-'black'
 
 wcr.sapday.all<-rbind(wcr.sapday.full[[1]],wcr.sapday.full[[2]],wcr.sapday.full[[3]])
-plot(rowMeans(wcr.sapday.all, na.rm=TRUE)~xax1, pch=wcr.pchvec, xaxt='n', ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018))
+
+plot(rowMeans(wcr.sapday.all, na.rm=TRUE)~xax1, pch=wcr.pchvec, xaxt='n', ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018), col='white')
+polygon(x=c(2015.4,2015.4, 2015.7,2015.7),y=c(-3,25,25, -3), col='light gray', border = NA);polygon(x=c(2016.4,2016.4, 2016.7,2016.7),y=c(-3,25,25, -3), col='light gray', border = NA);polygon(x=c(2017.4,2017.4, 2017.7,2017.7),y=c(-3,25,25, -3), col='light gray', border = NA);
+points(rowMeans(wcr.sapday.all, na.rm=TRUE)~xax1, pch=wcr.pchvec, xaxt='n', ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018), col=wcr.colvec)
+box(lwd=1)
 
 syv.sapday.all<-rbind(syv.sapday.full[[1]],syv.sapday.full[[2]],syv.sapday.full[[3]])
-plot(rowMeans(syv.sapday.all, na.rm=TRUE)~xax1, pch=syv.pchvec, ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018))
 
+plot(rowMeans(syv.sapday.all, na.rm=TRUE)~xax1, pch=syv.pchvec, xaxt='n', ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018), col='white')
+polygon(x=c(2015.4,2015.4, 2015.7,2015.7),y=c(-3,25,25, -3), col='light gray', border = NA);polygon(x=c(2016.4,2016.4, 2016.7,2016.7),y=c(-3,25,25, -3), col='light gray', border = NA);polygon(x=c(2017.4,2017.4, 2017.7,2017.7),y=c(-3,25,25, -3), col='light gray', border = NA);
+points(rowMeans(syv.sapday.all, na.rm=TRUE)~xax1, pch=syv.pchvec, xaxt='n', ylab="Sapflux g/m2s", ylim=c(0,20), xlim=c(2015.4, 2018), col=syv.colvec)
+box(lwd=1)
+
+
+rm('xax1', 'xax')
 #Aggregated plots####
+
 dry.ts<-syv.twr.d[syv.drytimes,1:10]
+dry.ts.decdate<-dry.ts$YEAR+(dry.ts$DOY/365); twr.decdate<-syv.twr.std$YEAR+(syv.twr.std$DOY/365)
+wetinds<-which(is.na(pmatch(twr.decdate,dry.ts.decdate, duplicates.ok=TRUE)))
+
+
 index<-0
 index.r<-0
 for(i in 1:nrow(dry.ts)){
   
-  subindex<- which(syv.twr$YEAR==dry.ts$YEAR[i]&syv.twr$DOY==dry.ts$DOY[i])
+  subindex<- which(syv.twr.std$YEAR==dry.ts$YEAR[i]&syv.twr.std$DOY==dry.ts$DOY[i])
   index<-c(index, subindex)
   
   randyr<-sample(c(2015:2017), 1)
   randDOY<-sample(c(144:259),1)
-  subindex.r<- which(syv.twr$YEAR==randyr&syv.twr$DOY==randDOY)
-  index.r<-c(index.r, subindex.r)
+  subindex.r<- which(syv.twr.std$YEAR==randyr&syv.twr.std$DOY==randDOY)
+  
+  if(all(subindex.r%in%wetinds) & sum(syv.twr.std$P_PI_F[subindex.r], na.rm=TRUE)==0){ #all(subindex.r%in%wetinds) &
+  index.r<-c(index.r, subindex.r)}
 }
+
+print((length(index.r)-1) / 48)
 
 dryind<-index[2:length(index)]
 randind<-index.r[2:length(index.r)]
 
 syv.sap.f<-rowMeans(syv.sap, na.rm=TRUE)
-drysyv<-cbind(syv.twr, syv.sap.f)[dryind,]
-randsyv<-cbind(syv.twr, syv.sap.f)[randind,]
-
-#plot(syv.sap.f~HOUR, data=randsyv, ylim=c(0, 22), pch=19)
-#points(syv.sap.f~HOUR, data=drysyv, col='red', pch='*')
+drysyv<-cbind(syv.twr.std, syv.sap.f)[dryind,]
+randsyv<-cbind(syv.twr.std, syv.sap.f)[randind,]
 
 #Again for wcr
-par(mfrow=c(2,2))
+
 dry.ts<-wcr.twr.d[wcr.drytimes,1:10]
+dry.ts.decdate<-dry.ts$YEAR+(dry.ts$DOY/365); twr.decdate<-wcr.twr.std$YEAR+(wcr.twr.std$DOY/365)
+wetinds<-which(is.na(pmatch(twr.decdate,dry.ts.decdate, duplicates.ok=TRUE)))
+
+
 index<-0
 index.r<-0
 for(i in 1:nrow(dry.ts)){
   
-  subindex<- which(wcr.twr$YEAR==dry.ts$YEAR[i]&wcr.twr$DOY==dry.ts$DOY[i])
+  subindex<- which(wcr.twr.std$YEAR==dry.ts$YEAR[i]&wcr.twr.std$DOY==dry.ts$DOY[i])
   index<-c(index, subindex)
   
   randyr<-sample(c(2015:2017), 1)
   randDOY<-sample(c(144:259),1)
-  subindex.r<- which(wcr.twr$YEAR==randyr&wcr.twr$DOY==randDOY)
-  index.r<-c(index.r, subindex.r)
+  subindex.r<-which(wcr.twr.std$YEAR==randyr & wcr.twr.std$DOY==randDOY)
+  
+  if(all(subindex.r%in%wetinds) &  sum(wcr.twr.std$P_PI_F[subindex.r], na.rm=TRUE)==0 ){  #all(subindex.r%in%wetinds) &
+    index.r<-c(index.r, subindex.r)}
 }
+
+print((length(index.r)-1) / 48)
 
 dryind<-index[2:length(index)]
 randind<-index.r[2:length(index.r)]
 
 wcr.sap.f<-rowMeans(wcr.sap, na.rm=TRUE)
-drywcr<-cbind(wcr.twr, wcr.sap.f)[dryind,]
-randwcr<-cbind(wcr.twr, wcr.sap.f)[randind,]
+drywcr<-cbind(wcr.twr.std, wcr.sap.f)[dryind,]
+randwcr<-cbind(wcr.twr.std, wcr.sap.f)[randind,]
 
-#plot(wcr.sap.f~HOUR, data=randwcr, ylim=c(0, 40), pch=19)
-#points(wcr.sap.f~HOUR, data=drywcr, col='red', pch='*')
+rm('dry.ts', 'dry.ts.decdate', 'twr.decdate', 'dryind', 'randDOY','randind', 'randyr')
 #####
 
 #Panel 2
 
 par(mfrow=c(2,1))
 
-dryhr<-aggregate(drysyv, by=list(drysyv$HOUR), FUN='mean', na.rm=TRUE);randhr<-aggregate(randsyv, by=list(randsyv$HOUR), FUN='mean', na.rm=TRUE)
-
-plot(syv.sap.f~HOUR, data=randhr, ylim=c(0, 22), pch=1)
-points(syv.sap.f~HOUR, data=dryhr, pch=19)
-
 dryhr<-aggregate(drywcr, by=list(drywcr$HOUR), FUN='mean', na.rm=TRUE);randhr<-aggregate(randwcr, by=list(randwcr$HOUR), FUN='mean', na.rm=TRUE)
 
-plot(wcr.sap.f~HOUR, data=randhr, ylim=c(0, 40), pch=1)
-points(wcr.sap.f~HOUR, data=dryhr, pch=19)
+plot(wcr.sap.f~HOUR, data=randhr, ylim=c(0, 40), pch=19)
+points(wcr.sap.f~HOUR, data=dryhr, pch=1)
 
+dryhr<-aggregate(drysyv, by=list(drysyv$HOUR), FUN='mean', na.rm=TRUE);randhr<-aggregate(randsyv, by=list(randsyv$HOUR), FUN='mean', na.rm=TRUE)
+
+plot(syv.sap.f~HOUR, data=randhr, ylim=c(0, 22), pch=17)
+points(syv.sap.f~HOUR, data=dryhr, pch=2)
+
+
+rm('randhr', 'dryhr', 'randsyv','randwcr')
+rm('syv.daysoil', 'wcr.daysoil','syv.dayvpd','wcr.dayvpd')
 
 
